@@ -1545,7 +1545,7 @@ class Deck {
     this.bus.connect(this.echoSend); this.echoSend.connect(this.echoDelay); this.echoDelay.connect(this.echoFb); this.echoFb.connect(this.echoDelay); this.echoDelay.connect(this.vgain);
     this.bus.connect(this.revSend); this.revSend.connect(this.conv); this.conv.connect(this.vgain);
     this.vgain.connect(this.xgain); this.xgain.connect(master);
-    this.meterAn = ctx.createAnalyser(); this.meterAn.fftSize = 1024; this.vgain.connect(this.meterAn);   // channel meter (post volume, pre crossfader)
+       // channel meter (post volume, pre crossfader)
     this.applyGain();
     this.applyVol(); this.el.querySelectorAll('.eq').forEach(s => this.setEQ(s.dataset.band, +s.value));
     for (const k in this.fx) this.setFX(k, this.fx[k].on, this.fx[k].amt);
@@ -2699,6 +2699,7 @@ function audioLag(out, inc, W) {
 }
 // once per bar during a beat-matched blend: measure the phase error and nudge the incoming speed (max ±0.5%, smoothed) to cancel it
 function lockTick(now) {
+  if (CAR_NO_DRIFT) return;   // car: no drift-lock nudges
   const { out, in: inc } = mix;
   if (document.hidden || !mix.lock || now > mix.lockUntil || !inc.playing || !out.playing || inc.t0 > now - 0.05 || out.brk || inc.brk || out.rolling || out.scr || inc.scr || inc.ptr) return;
   const ob = 60 / out.bpm, k = Math.floor((out.pos() - out.beat0) / (4 * ob));
@@ -2715,6 +2716,7 @@ function lockTick(now) {
 }
 // Start a beat-aligned transition: incoming deck starts at song time T0track of the outgoing deck
 function beginMix(out, inc, T0track, mixBars, picks, opts = {}) {
+  if (carSafe()) { picks = []; opts = Object.assign({}, opts, { tail: 0 }); }
   // only one transition at a time: a late or doubled timer tick (phone screen off) must never start a second one on top
   if (mix.phase === 'mixing' || inc.playing || !out.playing) return;
   // screen off: page timers can stall for minutes, so only moves that are pure audio-clock automation, no drift-lock nudges,
@@ -2726,7 +2728,7 @@ function beginMix(out, inc, T0track, mixBars, picks, opts = {}) {
   // a deck whose tempo you set by hand is never retimed. The outgoing deck stops any glide so the match target holds still.
   out.glide = null;
   let matched = false;
-  if (!inc.manual) { const pct = inc.matchPct(out); matched = pct !== null && Math.abs(pct) <= 8; inc.setTempo(matched ? pct : 0, true); }
+  if (!inc.manual) { const pct = inc.matchPct(out); matched = !carSafe() && pct !== null && Math.abs(pct) <= 8; inc.setTempo(matched ? pct : 0, true); }
   const when = now + (T0track - pos) / out.rate, barR = bar / out.rate, mixDur = mixBars * barR;
   const from = +xf.value, to = inc === decks[0] ? -100 : 100, tail = opts.tail ?? tailFor(picks, barR, mixDur, !!opts.quick);
   Object.assign(mix, { out, in: inc, snapOut: out.snapshotFX(), snapIn: inc.snapshotFX(), quick: !!opts.quick });
@@ -2739,7 +2741,7 @@ function beginMix(out, inc, T0track, mixBars, picks, opts = {}) {
   if (incStart == null && opts.rise != null) { const ib = barOf(inc), d = (tx - incWhen) * inc.effRate; incStart = Math.max(inc.beat0, opts.rise - Math.ceil(d / ib - 1e-6) * ib); }
   if (incStart == null) incStart = inc.window ? inc.window.start : inc.beat0;
   // bass swap: the incoming bass stays cut, then both basses swap on the downbeat at the middle of the blend (one bass at a time)
-  mix.swap = cut ? 'none' : (dbl || own) ? 'swap' : genre().swap === 'none' ? 'none' : genre().swap;
+  mix.swap = carSafe() || cut ? 'none' : (dbl || own) ? 'swap' : genre().swap === 'none' ? 'none' : genre().swap;
   if (own) { inc.setEQ('low', -40, 0.005); mix.swapAt = null; }   // bass drop swap: its own bass moves (see planFX)
   else if (mix.swap !== 'none') {
     inc.setEQ('low', -40, 0.005);
@@ -2781,7 +2783,7 @@ function mixingTick(now) {
     out.pause(); out.fresh = false; out.window = null; out.lowClear(); inc.lowClear(); out.setEQ('low', 0); inc.setEQ('low', 0); endFX(false); mix.phase = 'idle'; mix.last.doneCtx = now;
     if (inc.bend && !inc.ptr) { const r = inc.effRate; inc.bend = 0; inc.applyRate(r); }   // fold the drift nudge into the tempo (no audible step)
     mix.last.lockLog = mix.lockLog;
-    if (!inc.ramp) inc.startGlide(6);   // blend done: ease the live song back to its own tempo (skipped if you set its tempo)
+    if (!inc.ramp) { inc.scheduleRamp(ctx.currentTime + 0.05, 6); if (!inc.ramp) inc.startGlide(6); }   // blend done: ease the live song back to its own tempo (skipped if you set its tempo)
     if (!mix.on) status(`Quick Mix done. Deck ${inc.id} is live.`);
   }
 }
@@ -2994,7 +2996,7 @@ function silentWav(secs = 8, sr = 8000) {
   return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
 }
 try {
-  bg.el = document.createElement('audio'); bg.el.setAttribute('playsinline', ''); bg.el.loop = true; bg.el.preload = 'auto'; bg.el.src = silentWav(8, 48000); bg.el.id = 'mediaAnchor';
+  bg.el = document.createElement('audio'); bg.el.setAttribute('playsinline', ''); bg.el.loop = true; bg.el.preload = 'auto'; bg.el.src = silentWav(3600, 3000); bg.el.id = 'mediaAnchor';
   document.body.appendChild(bg.el);
   bg.el.addEventListener('playing', () => { bg.on = true; msUpdate(true); });
   bg.el.addEventListener('pause', () => { bg.on = false; if (bg.self) { bg.self = false; return; } if (!freeze.on && decks.some(d => d.playing)) pauseAll(); });   // Android paused us (call, other app took audio focus)
@@ -3048,8 +3050,10 @@ let msTitle = null;
 function msUpdate(force) {
   if (!('mediaSession' in navigator) || !ctx) return;
   const ms = navigator.mediaSession, on = decks.filter(d => d.playing && d.t0 <= ctx.currentTime + 0.05), live = on.length > 1 ? (+xf.value <= 0 ? decks[0] : decks[1]) : on[0], title = live ? carName(live) : 'Daniel Car';
-  if ((force || title !== msTitle) && window.MediaMetadata) { msTitle = title; const cp = carParse(title); ms.metadata = new MediaMetadata({ title: cp.title, artist: cp.artist || 'Daniel Car', album: 'Daniel Car · Auto-mix', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); }
-  ms.playbackState = freeze.on ? 'paused' : decks.some(d => d.playing) ? 'playing' : 'paused';
+  if ((title !== msTitle || !ms.metadata) && window.MediaMetadata) { msTitle = title; const cp = carParse(title); ms.metadata = new MediaMetadata({ title: cp.title, artist: cp.artist || 'Daniel Car', album: 'Daniel Car', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); }
+  const state = freeze.on ? 'paused' : decks.some(d => d.playing) ? 'playing' : 'paused';
+  if (ms.playbackState !== state) ms.playbackState = state;
+  carPosState(live, title, state);
 }
 setInterval(() => {
   freezeUI();
@@ -3122,15 +3126,29 @@ try {
 // ===================== Daniel Car: simplified car UI on top of the Daniel DJ engine =====================
 // The full DJ engine above (decks, automix planner, every transition, key lock, background playback) runs unchanged;
 // its controls stay in the page but hidden. This layer only drives it: play / pause, skip, volume, playlists, settings.
-const CAR_VER = 'v1.1';
+const CAR_VER = 'v1.2';
+const CAR_NO_DRIFT = true;
 const $c = id => document.getElementById(id);
 document.body.classList.add('car');
-const carPrefs = Object.assign({ style: 'custom', len: 'auto', move: '', intensity: 'auto', fx: true, play: 'full', vol: 85, repeat: true, perf: true }, store.get('dcar-prefs', {}));
+const carPrefs = Object.assign({ style: 'custom', len: 'auto', move: '', intensity: 'auto', fx: true, play: 'full', vol: 85, repeat: true, perf: true, safe: false }, store.get('dcar-prefs', {}));
 const saveCarPrefs = () => store.set('dcar-prefs', carPrefs);
 // v1.1: switch key lock off once for phones that already ran v1 (it can crackle on phones); you can still turn it on in Settings
 if (!store.get('dcar-kl-off-v11', false)) { store.set('dcar-kl-off-v11', true); store.set('dcar-keylock', false); keyLock.on = false; }
+function carSafe() { return !!(carPrefs && carPrefs.safe); }
 function carDefer() { return !!carPrefs.perf && decks.some(d => d.playing) && !freeze.on; }
 // pause every CSS animation while the page is hidden / screen off
+// lock screen / car display: the real song position (never the silent anchor's), re-sent only on song change,
+// play/pause, or when it drifts more than 1.5 s from what the car is extrapolating (tempo changes, transitions)
+const carPS = { key: '', at: 0, p: 0, r: 1, state: '' };
+function carPosState(live, title, state) {
+  const ms = navigator.mediaSession; if (!ms || !ms.setPositionState) return;
+  try {
+    if (!live || !live.buffer) { if (carPS.key) { ms.setPositionState(); carPS.key = ''; } return; }
+    const dur = live.buffer.duration, p = clamp(live.pos(), 0, dur), r = clamp(live.effRate || 1, 0.25, 2), now = performance.now() / 1000;
+    const exp = carPS.p + (carPS.state === 'playing' ? (now - carPS.at) * carPS.r : 0), key = title + '|' + state;
+    if (key !== carPS.key || Math.abs(exp - p) > 1.5) { ms.setPositionState({ duration: dur, playbackRate: r, position: p }); Object.assign(carPS, { key, at: now, p, r, state }); }
+  } catch (e) {}
+}
 const carHid = () => document.body.classList.toggle('hid', document.hidden);
 document.addEventListener('visibilitychange', carHid); window.addEventListener('pagehide', () => document.body.classList.add('hid')); window.addEventListener('pageshow', carHid);
 const CAR_LENS = { short: [4, 1], medium: [8, 2], long: [16, 4], xlong: [32, 4] };
@@ -3367,12 +3385,13 @@ function carRenderSet() {
     SEG('play', 'Play each song', '', [['full', 'Full song'], ['s:120', '2 min'], ['s:90', '90 s'], ['s:60', '60 s']]) +
     SEG('kl', 'Key lock', 'Keeps voices natural while songs are tempo-matched. Off is recommended in the car: on some phones it causes clicks.', [[true, 'On'], [false, 'Off']]) +
     SEG('repeat', 'Repeat queue', '', [[true, 'On'], [false, 'Off']]) +
+    SEG('safe', 'Safe mode', 'Troubleshooting: plain crossfades at each song\'s own speed. No beat-matching, effects, bass swap or key lock.', [[true, 'On'], [false, 'Off']]) +
     SEG('perf', 'Performance mode', 'Recommended in the car. Static glow, no smoke, and the rest of the playlist is analyzed only while paused, so the phone puts everything into smooth audio.', [[true, 'On'], [false, 'Off']]) +
     `<div class="vlab">DANIEL CAR ${CAR_VER} · DANIEL DJ ENGINE ${APP_VERSION}</div>`;
   $c('cSettings').querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
     const k = g.dataset.k; let v = b.dataset.v; if (v === 'true') v = true; else if (v === 'false') v = false;
     if (k === 'kl') { if (keyLock.failed) carToast(keyLock.failed); else setKeyLock(v); }
-    else { carPrefs[k] = v; saveCarPrefs(); applyCarPrefs(); }
+    else { carPrefs[k] = v; saveCarPrefs(); applyCarPrefs(); if (k === 'safe' && v && keyLock.on) setKeyLock(false); }
     g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
   }));
   const klg = $c('cSettings').querySelector('[data-k="kl"]'); klg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === String(keyLock.on)));
@@ -3420,7 +3439,8 @@ function carFrame() {
   if (carTxt.pill !== pill) { carTxt.pill = pill; $c('cPill').innerHTML = pill; }
   // keep the engine in car mode
   if (carStarted && !mix.on && playlist.length) setAutomix(true);
-  if (carPrefs.move && presetQ.id !== carPrefs.move && mix.phase !== 'mixing') setQueued(carPrefs.move);
+  if (!carSafe() && carPrefs.move && presetQ.id !== carPrefs.move && mix.phase !== 'mixing') setQueued(carPrefs.move);
+  if (carSafe() && presetQ.id) setQueued('');
   carRepeatCheck(false);
   if (carQueueDirty && !storing) { carQueueDirty = false; carSaveQueue(); }
   if ($c('sLib').classList.contains('open') && signature() !== libSig) carRenderLib();
