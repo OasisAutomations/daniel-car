@@ -281,6 +281,16 @@ body.playing #car .pp{animation:breathe 4.5s ease-in-out infinite}
 }
 @media (prefers-reduced-motion:reduce){#car .smoke i,body.playing #car .pp{animation:none}}
 
+/* performance mode (default): no smoke, no pulsing, single-layer static glow */
+body.perf #car .smoke{display:none}
+body.perf #car .pp,body.perf.playing #car .pp{animation:none}
+body.perf #car .nl{transition:transform .12s;box-shadow:0 0 1.5px rgba(217,255,210,.9),0 0 8px rgba(57,255,20,.35)}
+body.perf #car .nl:active,body.perf #car .nl.press{box-shadow:0 0 2px #e6ffe0,0 0 12px rgba(57,255,20,.55)}
+body.perf.playing #car .pp{box-shadow:0 0 2px rgba(217,255,210,1),0 0 12px rgba(57,255,20,.5)}
+body.perf #car .nl svg,body.perf #car .vol svg{filter:drop-shadow(0 0 3px rgba(57,255,20,.55))}
+body.hid #car *,body.hid #car *::after{animation-play-state:paused!important}
+body.hid #car .smoke{display:none}
+
 </style>
 </head>
 <body class="car">
@@ -2184,6 +2194,7 @@ async function analyzeAll() {
   try {
     let it;
     while ((it = playlist.find(x => !x.info && !x.failed))) {
+      if (carDefer()) { await new Promise(r => setTimeout(r, 1500)); continue; }
       try { const buf = await ctx.decodeAudioData(await it.file.arrayBuffer()); it.dur = buf.duration; it.durExact = true; it.info = analyzeTrack(mixDown(buf), buf.sampleRate); it.bpm = it.info.bpm; carSaveInfo(it); }
       catch (e) { it.failed = true; }
       renderPlaylist(); await new Promise(r => setTimeout(r, 0));
@@ -2455,7 +2466,7 @@ const fxLabel = document.getElementById('fxlabel');
 // one with the same fixed delay, so beat alignment and the sample-exact swaps are unchanged; the whole mix is just ~90 ms later.
 const KL_D = 4096, KL_CAL = 0.005;   // delay (frames) and measured average lead of the WSOLA output (s)
 const klLat = () => ctx ? KL_D / ctx.sampleRate : 0;
-const keyLock = { on: store.get('dcar-keylock', true), ready: false, failed: '' };
+const keyLock = { on: store.get('dcar-keylock', false), ready: false, failed: '' };
 function klSetup() {
   if (!ctx.audioWorklet || !window.AudioWorkletNode) { keyLock.failed = 'Key lock needs AudioWorklet, which this browser lacks: tempo changes move the pitch.'; return klUI(); }
   const url = URL.createObjectURL(new Blob([document.getElementById('kl-src').textContent], { type: 'application/javascript' }));
@@ -2983,7 +2994,7 @@ function silentWav(secs = 8, sr = 8000) {
   return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
 }
 try {
-  bg.el = document.createElement('audio'); bg.el.setAttribute('playsinline', ''); bg.el.loop = true; bg.el.preload = 'auto'; bg.el.src = silentWav(); bg.el.id = 'mediaAnchor';
+  bg.el = document.createElement('audio'); bg.el.setAttribute('playsinline', ''); bg.el.loop = true; bg.el.preload = 'auto'; bg.el.src = silentWav(8, 48000); bg.el.id = 'mediaAnchor';
   document.body.appendChild(bg.el);
   bg.el.addEventListener('playing', () => { bg.on = true; msUpdate(true); });
   bg.el.addEventListener('pause', () => { bg.on = false; if (bg.self) { bg.self = false; return; } if (!freeze.on && decks.some(d => d.playing)) pauseAll(); });   // Android paused us (call, other app took audio focus)
@@ -3111,11 +3122,17 @@ try {
 // ===================== Daniel Car: simplified car UI on top of the Daniel DJ engine =====================
 // The full DJ engine above (decks, automix planner, every transition, key lock, background playback) runs unchanged;
 // its controls stay in the page but hidden. This layer only drives it: play / pause, skip, volume, playlists, settings.
-const CAR_VER = 'v1';
+const CAR_VER = 'v1.1';
 const $c = id => document.getElementById(id);
 document.body.classList.add('car');
-const carPrefs = Object.assign({ style: 'custom', len: 'auto', move: '', intensity: 'auto', fx: true, play: 'full', vol: 85, repeat: true }, store.get('dcar-prefs', {}));
+const carPrefs = Object.assign({ style: 'custom', len: 'auto', move: '', intensity: 'auto', fx: true, play: 'full', vol: 85, repeat: true, perf: true }, store.get('dcar-prefs', {}));
 const saveCarPrefs = () => store.set('dcar-prefs', carPrefs);
+// v1.1: switch key lock off once for phones that already ran v1 (it can crackle on phones); you can still turn it on in Settings
+if (!store.get('dcar-kl-off-v11', false)) { store.set('dcar-kl-off-v11', true); store.set('dcar-keylock', false); keyLock.on = false; }
+function carDefer() { return !!carPrefs.perf && decks.some(d => d.playing) && !freeze.on; }
+// pause every CSS animation while the page is hidden / screen off
+const carHid = () => document.body.classList.toggle('hid', document.hidden);
+document.addEventListener('visibilitychange', carHid); window.addEventListener('pagehide', () => document.body.classList.add('hid')); window.addEventListener('pageshow', carHid);
 const CAR_LENS = { short: [4, 1], medium: [8, 2], long: [16, 4], xlong: [32, 4] };
 function carVolVal() { const v = clamp((carPrefs ? carPrefs.vol : 85) / 100, 0, 1); return v * v; }
 function applyCarPrefs() {
@@ -3126,6 +3143,7 @@ function applyCarPrefs() {
   if (carPrefs.intensity !== 'auto') document.getElementById('intensity').value = carPrefs.intensity;
   fxAuto.on = !!carPrefs.fx; fxBtn.classList.toggle('on', fxAuto.on); fxBtn.textContent = 'Auto FX: ' + (fxAuto.on ? 'ON' : 'OFF');
   globalLen.value = carPrefs.play;
+  document.body.classList.toggle('perf', !!carPrefs.perf);
   setQueued(carPrefs.move);
   if (carVol) carVol.gain.setTargetAtTime(carVolVal(), ctx.currentTime, 0.03);
   $c('cVol').value = carPrefs.vol; $c('cVol').style.setProperty('--v', carPrefs.vol + '%');
@@ -3347,8 +3365,9 @@ function carRenderSet() {
     SEG('intensity', 'Effects intensity', '', [['auto', 'Auto'], ['subtle', 'Subtle'], ['normal', 'Normal'], ['wild', 'Wild']]) +
     SEG('fx', 'DJ effects', 'Off keeps clean beat-matched blends with no echoes, sweeps or spinbacks.', [[true, 'On'], [false, 'Off']]) +
     SEG('play', 'Play each song', '', [['full', 'Full song'], ['s:120', '2 min'], ['s:90', '90 s'], ['s:60', '60 s']]) +
-    SEG('kl', 'Key lock', 'Keeps voices natural when songs are tempo-matched.', [[true, 'On'], [false, 'Off']]) +
+    SEG('kl', 'Key lock', 'Keeps voices natural while songs are tempo-matched. Off is recommended in the car: on some phones it causes clicks.', [[true, 'On'], [false, 'Off']]) +
     SEG('repeat', 'Repeat queue', '', [[true, 'On'], [false, 'Off']]) +
+    SEG('perf', 'Performance mode', 'Recommended in the car. Static glow, no smoke, and the rest of the playlist is analyzed only while paused, so the phone puts everything into smooth audio.', [[true, 'On'], [false, 'Off']]) +
     `<div class="vlab">DANIEL CAR ${CAR_VER} · DANIEL DJ ENGINE ${APP_VERSION}</div>`;
   $c('cSettings').querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
     const k = g.dataset.k; let v = b.dataset.v; if (v === 'true') v = true; else if (v === 'false') v = false;
@@ -3362,10 +3381,11 @@ function carRenderSet() {
 const carHist = []; let carLastItem = null, carNoHist = false, carT = 0, carTxt = {};
 const carSet = (id, t) => { if (carTxt[id] !== t) { carTxt[id] = t; $c(id).textContent = t; } };
 const IC_PAUSE_P = '<path d="M9 5.5v13M15 5.5v13"/>', IC_PLAY_P = '<path d="M8 5.2v13.6L19 12z"/>';
-let carPlayState = null;
+let carPlayState = null, carPT = 0;
 function carFrame() {
   const live = carLive(), playing = decks.some(d => d.playing) && !freeze.on;
   if (carPlayState !== playing) { carPlayState = playing; $c('cPlayIc').innerHTML = playing ? IC_PAUSE_P : IC_PLAY_P; $c('cPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); document.body.classList.toggle('playing', playing); }
+  const t0 = performance.now(); if (carPrefs.perf && t0 - carPT < 500) return; carPT = t0;
   if (live && live.buffer) {
     const dur = live.window && live.window.end < Infinity ? live.window.end : live.buffer.duration, p = live.shownPos;
     $c('cProg').style.width = (clamp(p / dur, 0, 1) * 100).toFixed(2) + '%';
