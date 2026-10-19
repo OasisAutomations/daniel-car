@@ -290,6 +290,10 @@ body.perf.playing #car .pp{box-shadow:0 0 2px rgba(217,255,210,1),0 0 12px rgba(
 body.perf #car .nl svg,body.perf #car .vol svg{filter:drop-shadow(0 0 3px rgba(57,255,20,.55))}
 body.hid #car *,body.hid #car *::after{animation-play-state:paused!important}
 body.hid #car .smoke{display:none}
+/* v1.5 diagnostics section */
+#car .dhd{margin:26px 0 4px;padding-top:16px;border-top:1px solid rgba(217,255,210,.18);font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--core)}
+#car .dnote{display:block;color:var(--mut);font-size:13px;margin-bottom:6px}
+#car .dinfo{margin:14px 0 4px;font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--mut);word-break:break-word}
 
 </style>
 </head>
@@ -1376,7 +1380,7 @@ const fmtDur = s => { s = Math.round(Math.max(0, s)); const h = Math.floor(s / 3
 const fmt = s => { s = Math.max(0, s); return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); };
 function audio() {
   if (!ctx) {
-    ctx = new AudioContext({ latencyHint: 'playback' });   // bigger buffers: no dropouts when the phone throttles the CPU with the screen off
+    ctx = carNewCtx();   // bigger buffers: no dropouts when the phone throttles the CPU with the screen off
     // master: a little headroom -> gentle glue compressor -> fast limiter, so FX stacks never clip
     master = ctx.createGain(); master.gain.value = 0.8;
     const comp = ctx.createDynamicsCompressor();
@@ -1388,7 +1392,7 @@ function audio() {
     const len = Math.floor(ctx.sampleRate * 2.8); reverbIR = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let c = 0; c < 2; c++) { const d = reverbIR.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
     fxOut = ctx.createDelay(1); fxOut.connect(master);   // synth FX (noise riser) go through the same delay as the key-locked decks
-    decks.forEach(d => d.initAudio()); applyXF(); klSetup();
+    decks.forEach(d => d.initAudio()); applyXF(); if (keyLock.on) carKlLoad(); carAnchorRoute();
   }
   if (ctx.state === 'suspended' && !freeze.on) ctx.resume();   // a Pause (freeze) stays paused until Resume
   return ctx;
@@ -2190,6 +2194,7 @@ document.getElementById('sort').onchange = e => { if (e.target.value) reorderUpc
 // BPM detection on add, one song at a time (keeps memory low)
 let analyzing = false;
 async function analyzeAll() {
+  if (carD('plain')) return;
   if (analyzing) return; analyzing = true; audio();
   try {
     let it;
@@ -2484,6 +2489,7 @@ function klRoute() {
   if (fxOut) fxOut.delayTime.value = want ? klLat() : 0;
 }
 function setKeyLock(on) {
+  if (on && ctx) carKlLoad();
   keyLock.on = on; store.set('dcar-keylock', on);
   const go = () => { klRoute(); klUI(); };
   // switching while music plays: dip the master for a moment so the ~90 ms jump isn't a click
@@ -3001,7 +3007,7 @@ try {
   bg.el.addEventListener('playing', () => { bg.on = true; msUpdate(true); });
   bg.el.addEventListener('pause', () => { bg.on = false; if (bg.self) { bg.self = false; return; } if (!freeze.on && decks.some(d => d.playing)) pauseAll(); });   // Android paused us (call, other app took audio focus)
 } catch (e) { bg.el = null; }
-function bgAnchorPlay() { if (bg.el && bg.el.paused) bg.el.play().then(() => msUpdate(true)).catch(() => {}); }
+function bgAnchorPlay() { if (carD('anchor') === 'off' || carD('plain')) return; if (bg.el && bg.el.paused) bg.el.play().then(() => msUpdate(true)).catch(() => {}); }
 function bgAnchorPause() { if (bg.el && !bg.el.paused) { bg.self = true; bg.el.pause(); } }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { mixLast = 0; mixTick(); return; }   // screen going off: commit the next transition onto the audio clock now
@@ -3037,18 +3043,19 @@ function freezeUI() {
   const b = document.getElementById('avPause'), playing = decks.some(d => d.playing);
   const t = freeze.on ? '▶ Resume' : playing ? '❚❚ Pause' : '▶ Start automix';
   if (b.textContent !== t) b.textContent = t;
-  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = freeze.on ? 'paused' : playing ? 'playing' : 'paused';
+  if ('mediaSession' in navigator && carD('ms') && !carD('plain')) navigator.mediaSession.playbackState = freeze.on ? 'paused' : playing ? 'playing' : 'paused';
 }
 document.getElementById('avPause').onclick = pauseToggle; freezeUI();
 // lock screen / notification / headphone controls (where the browser offers them for Web Audio)
 if ('mediaSession' in navigator) {
   const ms = navigator.mediaSession, h = (a, f) => { try { ms.setActionHandler(a, f); } catch (e) {} };
-  h('play', () => { if (freeze.on) resumeAll(); else if (!decks.some(d => d.playing)) carPlay(); }); h('pause', pauseAll); h('stop', pauseAll);
+  h('play', () => { if (carD('plain')) return carPlainResume(); if (freeze.on) resumeAll(); else if (!decks.some(d => d.playing)) carPlay(); }); h('pause', () => carD('plain') ? carPlainPause() : pauseAll()); h('stop', () => carD('plain') ? carPlainPause() : pauseAll());
   h('nexttrack', () => carNext()); h('previoustrack', () => carPrev());
 }
 let msTitle = null;
 function msUpdate(force) {
   if (!('mediaSession' in navigator) || !ctx) return;
+  if (!carD('ms')) { try { if (navigator.mediaSession.metadata) navigator.mediaSession.metadata = null; } catch (e) {} return; }   // diagnostics: car display info off
   const ms = navigator.mediaSession, on = decks.filter(d => d.playing && d.t0 <= ctx.currentTime + 0.05), live = on.length > 1 ? (+xf.value <= 0 ? decks[0] : decks[1]) : on[0], title = live ? carName(live) : 'Daniel Car';
   if ((title !== msTitle || !ms.metadata) && window.MediaMetadata) { msTitle = title; const cp = carParse(title); ms.metadata = new MediaMetadata({ title: cp.title, artist: cp.artist || 'Daniel Car', album: 'Daniel Car', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); }
   const state = freeze.on ? 'paused' : decks.some(d => d.playing) ? 'playing' : 'paused';
@@ -3062,6 +3069,7 @@ setInterval(() => {
   msUpdate();
 }, 1000);
 function unlockAudio() {
+  if (carD('plain')) return;
   try {
     const c = audio(), s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0);
     if (navigator.audioSession) navigator.audioSession.type = 'playback';   // iPhone: play even with the silent switch on
@@ -3098,7 +3106,7 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || e.target.tagName === 'SELECT' || (e.target.tagName === 'INPUT' && e.target.type !== 'range')) return;
   const [A, B] = decks, k = e.key.toLowerCase();
   const acts = { ' ': () => carPlay(), arrowright: () => carNext(), n: () => carNext(), arrowleft: () => carPrev(), b: () => carPrev() };
-  if (acts[k]) { e.preventDefault(); audio(); acts[k](); }
+  if (acts[k]) { e.preventDefault(); if (!carD('plain')) audio(); acts[k](); }
 });
 
 // draw on animation frames; run automix on a timer so it keeps going when the window is in the background
@@ -3126,8 +3134,91 @@ try {
 // ===================== Daniel Car: simplified car UI on top of the Daniel DJ engine =====================
 // The full DJ engine above (decks, automix planner, every transition, key lock, background playback) runs unchanged;
 // its controls stay in the page but hidden. This layer only drives it: play / pause, skip, volume, playlists, settings.
-const CAR_VER = 'v1.4';
+const CAR_VER = 'v1.5';
 const CAR_NO_DRIFT = true;
+// ---------- v1.5 car diagnostics (read before the AudioContext exists; changing one reloads the app) ----------
+// anchor: 'mixer' = keep-alive clip played THROUGH the AudioContext (one output stream), 'separate' = its own <audio> output (v1.4), 'off'
+// ms: car display info (Media Session metadata / position)   buf: 'large' (~0.2 s exact) | 'normal' ('playback')   sr: 'auto' | 44100 | 48000
+// plain: diagnostic plain player, one <audio> element, no Web Audio at all
+// (a function, not a const: the engine's own code calls carD() before this part of the script has run)
+function carDiagDef() { return { anchor: 'mixer', ms: true, buf: 'large', sr: 'auto', plain: false }; }
+function carD(k) { if (!window.__carDiag) window.__carDiag = Object.assign(carDiagDef(), store.get('dcar-diag', {})); return window.__carDiag[k]; }
+function carNewCtx() {
+  const o = { latencyHint: carD('buf') === 'normal' ? 'playback' : 0.2 };
+  if (carD('sr') !== 'auto' && +carD('sr') > 0) o.sampleRate = +carD('sr');
+  try { return new AudioContext(o); } catch (e) { console.warn('AudioContext options rejected, using defaults', o, e); return new AudioContext({ latencyHint: 'playback' }); }
+}
+let carKlLoading = false, carAnchorSrc = null;
+function carKlLoad() { if (carKlLoading || keyLock.ready || keyLock.failed || !ctx) return; carKlLoading = true; klSetup(); }
+function carAnchorRoute() {
+  if (carD('anchor') !== 'mixer' || !bg.el || carAnchorSrc || !ctx) return;
+  try { carAnchorSrc = ctx.createMediaElementSource(bg.el); carAnchorSrc.connect(ctx.destination); } catch (e) { console.warn('anchor routing failed', e); }
+}
+function carDiagSet(k, v) {
+  const d = Object.assign(carDiagDef(), store.get('dcar-diag', {})); d[k] = v; store.set('dcar-diag', d);
+  carToast('Restarting the player to apply…'); setTimeout(() => location.reload(), 700);
+}
+function carDiagInfo() {
+  if (carD('plain')) return 'Plain player: Web Audio is OFF (no mixer, no keep-alive clip, no transitions).';
+  if (!ctx) return 'Audio not started yet: press Play, then reopen Settings.';
+  const ms = v => (v > 0 ? Math.round(v * 1000) + ' ms' : 'n/a');
+  return `Output ${ctx.sampleRate} Hz · buffer ${ms(ctx.baseLatency)} · device latency ${ms(ctx.outputLatency)} · keep-alive ${carD('anchor') === 'mixer' ? (carAnchorSrc ? 'through mixer' : 'mixer (not routed)') : carD('anchor')} · key lock engine ${keyLock.ready ? 'loaded' : 'not loaded'}`;
+}
+// ---------- plain player (diagnostic): one <audio> element straight to the phone's output ----------
+const carPl = { el: null, it: null, url: '' };
+function carPlEl() {
+  if (carPl.el) return carPl.el;
+  const a = carPl.el = document.createElement('audio'); a.id = 'plainPlayer'; a.preload = 'auto'; a.setAttribute('playsinline', ''); document.body.appendChild(a);
+  a.addEventListener('ended', () => carPlainNext(true));
+  a.addEventListener('error', () => { if (!carPl.it || !a.getAttribute('src')) return; carPl.it.failed = true; carToast("Couldn't play that song"); setTimeout(() => carPlainNext(true), 300); });
+  a.addEventListener('playing', carPlainMs); a.addEventListener('pause', carPlainMs);
+  return a;
+}
+function carPlainMs() {
+  if (!('mediaSession' in navigator)) return; const ms = navigator.mediaSession;
+  if (!carD('ms')) { try { if (ms.metadata) ms.metadata = null; } catch (e) {} return; }
+  const it = carPl.it; if (!it || !window.MediaMetadata) return;
+  if (carPl.msFor !== it) { carPl.msFor = it; const p = carParse(it.name); ms.metadata = new MediaMetadata({ title: p.title, artist: p.artist || 'Daniel Car', album: 'Daniel Car · Plain player', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); }
+  ms.playbackState = carPl.el && !carPl.el.paused ? 'playing' : 'paused';
+}
+function carPlainLoad(it) {
+  const a = carPlEl(); if (carPl.it && carPl.it !== it) { carHist.push(carPl.it); if (carHist.length > 50) carHist.shift(); }
+  if (carPl.url) URL.revokeObjectURL(carPl.url);
+  carPl.it = it; it.failed = false; it.played = true; carPl.url = URL.createObjectURL(it.file); a.src = carPl.url; a.volume = carVolVal();
+  carPlainMs(); return a.play().catch(() => carToast('Tap Play to start'));
+}
+const carPlainQ = () => playlist.filter(it => !it.failed || it === carPl.it);
+function carPlainNext(auto) {
+  const q = carPlainQ(); if (!q.length) { carToast('Add some music first'); return carOpen('sLib'); }
+  let i = carPl.it ? q.indexOf(carPl.it) + 1 : 0;
+  if (i >= q.length) { if (auto && !carPrefs.repeat) { carPl.el.pause(); return; } i = 0; }
+  carPlainLoad(q[i]);
+}
+function carPlainPrev() {
+  const a = carPl.el, q = carPlainQ(); if (!a || !carPl.it) return carPlainNext();
+  const i = q.indexOf(carPl.it);
+  if (a.currentTime > 5 || i <= 0) { a.currentTime = 0; if (a.paused) a.play().catch(() => {}); return; }
+  carPlainLoad(q[i - 1]);
+}
+function carPlainPlay() { const a = carPl.el; if (!a || !carPl.it) return carPlainNext(); if (a.paused) a.play().catch(() => {}); else a.pause(); }
+function carPlainResume() { const a = carPl.el; if (!a || !carPl.it) return carPlainNext(); if (a.paused) a.play().catch(() => {}); }
+function carPlainPause() { if (carPl.el && !carPl.el.paused) carPl.el.pause(); }
+let carPlT = 0;
+function carPlainFrame() {
+  const a = carPl.el, it = carPl.it, playing = !!a && !a.paused;
+  if (carPlayState !== playing) { carPlayState = playing; $c('cPlayIc').innerHTML = playing ? IC_PAUSE_P : IC_PLAY_P; $c('cPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); document.body.classList.toggle('playing', playing); }
+  const t = performance.now(); if (t - carPlT < 500) return; carPlT = t;
+  if (it && a) {
+    const dur = isFinite(a.duration) && a.duration > 0 ? a.duration : (it.dur || 0), p = a.currentTime || 0;
+    $c('cProg').style.width = (dur ? clamp(p / dur, 0, 1) * 100 : 0).toFixed(2) + '%'; carSet('cEl', fmt(p)); carSet('cRem', '-' + fmt(Math.max(0, dur - p)));
+    const pp = carParse(it.name); carSet('cTitle', pp.title); carSet('cArtist', pp.artist || ' '); carSet('cMeta', 'Plain player · no mixing');
+  } else { carSet('cTitle', playlist.length ? 'Ready to roll' : 'Daniel Car'); carSet('cArtist', playlist.length ? `${playlist.length} songs · press play` : 'Tap Music to add your songs'); carSet('cMeta', 'Plain player · no mixing'); }
+  const q = carPlainQ(), n = it ? q[q.indexOf(it) + 1] || (carPrefs.repeat ? q[0] : null) : q[0], np = n ? carParse(n.name) : null;
+  $c('cNext').innerHTML = np ? `Next&nbsp;&nbsp;<span>${esc(np.title)}</span>${np.artist ? ' · ' + esc(np.artist) : ''}` : '';
+  const pill = '<b>Plain player</b> · diagnostics'; if (carTxt.pill !== pill) { carTxt.pill = pill; $c('cPill').innerHTML = pill; }
+  if (carQueueDirty && !storing) { carQueueDirty = false; carSaveQueue(); }
+  if ($c('sLib').classList.contains('open') && signature() !== libSig) carRenderLib();
+}
 const $c = id => document.getElementById(id);
 document.body.classList.add('car');
 const carPrefs = Object.assign({ style: 'custom', len: 'auto', move: '', intensity: 'auto', fx: true, play: 'full', vol: 85, repeat: true, perf: true, safe: false, dblmix: true }, store.get('dcar-prefs', {}));
@@ -3164,6 +3255,7 @@ function applyCarPrefs() {
   document.body.classList.toggle('perf', !!carPrefs.perf);
   setQueued(carPrefs.move);
   if (carVol) carVol.gain.setTargetAtTime(carVolVal(), ctx.currentTime, 0.03);
+  if (carPl.el) carPl.el.volume = carVolVal();
   $c('cVol').value = carPrefs.vol; $c('cVol').style.setProperty('--v', carPrefs.vol + '%');
 }
 // ---------- helpers ----------
@@ -3186,6 +3278,7 @@ const carWait = ms => new Promise(r => setTimeout(r, ms));
 // ---------- transport ----------
 let carStarted = false;
 function carPlay() {
+  if (carD('plain')) return carPlainPlay();
   audio();
   if (freeze.on) return resumeAll();
   if (decks.some(d => d.playing)) return pauseAll();
@@ -3203,6 +3296,7 @@ function carTapCheck(k) {
   carTap.k = k; carTap.t = now; carTap.target = null; return null;
 }
 async function carNext() {
+  if (carD('plain')) return carPlainNext();
   audio();
   if (freeze.on) resumeAll();
   const dbl = carTapCheck('next'); if (dbl) return carQuickCut(dbl);
@@ -3214,6 +3308,7 @@ async function carNext() {
   await quickMix();   // beat-matched quick transition using the mix style's moves
 }
 async function carPrev() {
+  if (carD('plain')) return carPlainPrev();
   audio();
   if (freeze.on) resumeAll();
   const dbl = carTapCheck('prev'); if (dbl) return carQuickCut(dbl);
@@ -3279,6 +3374,7 @@ async function carQuickCut(target) {
 }
 // play a song now: put it next, load it on the free deck and run a quick transition into it
 async function carJump(it, requeue) {
+  if (carD('plain')) return carPlainLoad(it);
   audio();
   if (freeze.on) resumeAll();
   if (mix.phase === 'mixing') return carToast('Mixing… try again in a moment');
@@ -3424,16 +3520,17 @@ async function carRenderLib() {
   $c('cCrates').innerHTML = ['All', ...CRATE_NAMES].map(n => `<button class="chip2${crates.sel === n ? ' on' : ''}" data-c="${n}">${n === 'All' ? 'Everything' : n} · ${cnt(n)}</button>`).join('');
   $c('cCrates').querySelectorAll('button').forEach(b => b.onclick = () => { pickCrate(b.dataset.c); carRenderLib(); });
   const shown = playlist.filter(it => inCrate(it) || isLive(it));
-  $c('cQueue').innerHTML = shown.length ? shown.map(it => { const p = carParse(it.name), live = isLive(it);
-    const sub = live ? 'Now playing' : it.played ? 'Played' : [p.artist, it.bpm ? Math.round(foldBpm(it.bpm)) + ' BPM' : (it.failed ? "Can't play" : 'Analyzing…'), it.dur ? fmtDur(it.dur) : ''].filter(Boolean).join(' · ');
+  $c('cQueue').innerHTML = shown.length ? shown.map(it => { const p = carParse(it.name), live = isLive(it) || (carD('plain') && carPl.it === it);
+    const sub = live ? 'Now playing' : it.played ? 'Played' : [p.artist, it.bpm ? Math.round(foldBpm(it.bpm)) + ' BPM' : (it.failed ? "Can't play" : carD('plain') ? '' : 'Analyzing…'), it.dur ? fmtDur(it.dur) : ''].filter(Boolean).join(' · ');
     return `<div class="li${live ? ' now' : it.played ? ' done' : ''}" data-id="${it.id}"><div class="t"><b>${esc(p.title)}</b><small>${esc(sub)}</small></div>${live ? '' : `<button class="nl ib x" data-rm aria-label="Remove">${IC_X}</button>`}</div>`; }).join('')
     : `<div class="empty2">${playlist.length ? 'No songs in this vibe yet.' : 'Queue is empty. Tap Add songs.'}</div>`;
   $c('cQueue').querySelectorAll('.li').forEach(r => {
     const it = playlist.find(x => String(x.id) === r.dataset.id); if (!it) return;
-    r.querySelector('.t').onclick = () => { if (isLive(it)) return; carClose(); carJump(it); };
+    r.querySelector('.t').onclick = () => { if (isLive(it) || (carD('plain') && carPl.it === it)) return; carClose(); carJump(it); };
     const rm = r.querySelector('[data-rm]'); if (rm) rm.onclick = () => { const i = playlist.indexOf(it); if (i >= 0 && !isLive(it)) { playlist.splice(i, 1); decks.forEach(d => { if (!d.playing && d.item === it) d.item.played = true; }); renderPlaylist(); carQueueDirty = true; carRenderLib(); } };
   });
 }
+const DSEG = (key, label, note, opts) => `<div class="set"><label>${label}</label>${note ? `<small>${note}</small>` : ''}<div class="seg" data-k="d:${key}">${opts.map(([v, l]) => `<button data-v="${esc(v)}" class="${String(carD(key)) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
 const SEG = (key, label, note, opts) => `<div class="set"><label>${label}</label>${note ? `<small>${note}</small>` : ''}<div class="seg" data-k="${key}">${opts.map(([v, l]) => `<button data-v="${esc(v)}" class="${String(carPrefs[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div></div>`;
 function carRenderSet() {
   carPrefs.kl = keyLock.on;
@@ -3450,9 +3547,17 @@ function carRenderSet() {
     SEG('dblmix', 'Quick mix on double-tap', 'Double-tap Next or Back (or the steering-wheel buttons) for a fast 1-bar DJ transition instead of the normal-length mix.', [[true, 'On'], [false, 'Off']]) +
     SEG('safe', 'Safe mode', 'Troubleshooting: plain crossfades at each song\'s own speed. No beat-matching, effects, bass swap or key lock.', [[true, 'On'], [false, 'Off']]) +
     SEG('perf', 'Performance mode', 'Recommended in the car. Static glow, no smoke, and the rest of the playlist is analyzed only while paused, so the phone puts everything into smooth audio.', [[true, 'On'], [false, 'Off']]) +
+    `<div class="dhd">Car diagnostics</div><small class="dnote">For tracking down clicks in the car. Changing one restarts the player.</small>` +
+    DSEG('plain', 'Plain player', 'Test only: plays songs one after another through a single plain audio player. No DJ engine, no mixing, no effects. If this still clicks, the cause is the phone / Bluetooth / car, not the mixer.', [[false, 'Off'], [true, 'On']]) +
+    DSEG('anchor', 'Background keep-alive clip', 'The silent clip that keeps the app playing with the screen off. Through mixer = one audio stream to the car (recommended). Separate = v1.4 behaviour (two streams). Off = no lock-screen / steering-wheel controls.', [['mixer', 'Through mixer'], ['separate', 'Separate'], ['off', 'Off']]) +
+    DSEG('ms', 'Car display info', 'Song title and time on the car screen (Media Session).', [[true, 'On'], [false, 'Off']]) +
+    DSEG('buf', 'Audio buffer', 'Large (~0.2 s) rides out phone hiccups; Normal is the standard browser buffer.', [['large', 'Large'], ['normal', 'Normal']]) +
+    DSEG('sr', 'Sample rate', 'Auto uses the phone\'s own rate. 44.1k matches most car Bluetooth links.', [['auto', 'Auto'], ['44100', '44.1k'], ['48000', '48k']]) +
+    `<div class="dinfo" id="cDiagInfo">${esc(carDiagInfo())}</div>` +
     `<div class="vlab">DANIEL CAR ${CAR_VER} · DANIEL DJ ENGINE ${APP_VERSION}</div>`;
   $c('cSettings').querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
     const k = g.dataset.k; let v = b.dataset.v; if (v === 'true') v = true; else if (v === 'false') v = false;
+    if (k.startsWith('d:')) { const dk = k.slice(2); if (String(carD(dk)) === String(v)) return; g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); return carDiagSet(dk, v); }
     if (k === 'kl') { if (keyLock.failed) carToast(keyLock.failed); else setKeyLock(v); }
     else { carPrefs[k] = v; saveCarPrefs(); applyCarPrefs(); if (k === 'safe' && v && keyLock.on) setKeyLock(false); }
     g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
@@ -3465,6 +3570,7 @@ const carSet = (id, t) => { if (carTxt[id] !== t) { carTxt[id] = t; $c(id).textC
 const IC_PAUSE_P = '<path d="M9 5.5v13M15 5.5v13"/>', IC_PLAY_P = '<path d="M8 5.2v13.6L19 12z"/>';
 let carPlayState = null, carPT = 0;
 function carFrame() {
+  if (carD('plain')) return carPlainFrame();
   const live = carLive(), playing = decks.some(d => d.playing) && !freeze.on;
   if (carPlayState !== playing) { carPlayState = playing; $c('cPlayIc').innerHTML = playing ? IC_PAUSE_P : IC_PLAY_P; $c('cPlay').setAttribute('aria-label', playing ? 'Pause' : 'Play'); document.body.classList.toggle('playing', playing); }
   const t0 = performance.now(); if (carPrefs.perf && t0 - carPT < 500) return; carPT = t0;
@@ -3519,7 +3625,7 @@ $c('cDir').onchange = e => { const f = [...e.target.files].filter(isAudio).sort(
 press('cSaveList', carSaveList);
 press('cShuf', () => { reorderUpcoming('shuffle'); carRenderLib(); carToast('Shuffled'); });
 press('cClear', () => { if (!confirm('Clear the queue? (Saved playlists stay.)')) return; const keep = playlist.filter(it => isLive(it)); playlist.length = 0; playlist.push(...keep); decks.forEach(d => { if (!d.playing && d.item) d.item.played = true; }); renderPlaylist(); carQueueDirty = true; carRenderLib(); });
-$c('cVol').oninput = e => { carPrefs.vol = +e.target.value; e.target.style.setProperty('--v', carPrefs.vol + '%'); if (carVol) carVol.gain.setTargetAtTime(carVolVal(), ctx.currentTime, 0.03); };
+$c('cVol').oninput = e => { carPrefs.vol = +e.target.value; e.target.style.setProperty('--v', carPrefs.vol + '%'); if (carVol) carVol.gain.setTargetAtTime(carVolVal(), ctx.currentTime, 0.03); if (carPl.el) carPl.el.volume = carVolVal(); };
 $c('cVol').onchange = saveCarPrefs;
 // drop files anywhere (desktop testing)
 document.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) carAdd([...e.dataTransfer.files]); });
