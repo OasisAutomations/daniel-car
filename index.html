@@ -81,6 +81,16 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 #car .seg button{flex:1 1 auto;min-height:54px;padding:0 14px;display:flex!important;align-items:center;justify-content:center;border-radius:14px;border:1px solid rgba(217,255,210,.25);color:var(--mut);font-size:15px}
 #car .seg button.on{border-color:var(--core);color:var(--ink);box-shadow:var(--glow)}
 #car .empty2{color:var(--mut);font-size:15px;padding:18px 4px;text-align:center}
+/* v2.1 Music screen: pinned controls + one scrolling list */
+#car #sLib .sh{margin-bottom:12px}
+#car .mtools{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#car .mtools .btn{min-height:64px;padding:6px 8px;flex-direction:column;gap:4px;font-size:15px;line-height:1.15;border-radius:16px!important}
+#car .mtools .btn svg{width:22px;height:22px}
+#car .mtabs{flex:none;margin:14px 0 6px;flex-wrap:nowrap}
+#car .mtabs button{flex:1 1 0;min-height:52px;padding:0 6px;font-size:15px;white-space:nowrap}
+#car .mtabs span{opacity:.7;margin-left:4px}
+#car .mlist{position:relative;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 2px 24px;border-top:1px solid rgba(217,255,210,.12)}
+@media (orientation:landscape) and (max-height:600px){#car .mtools{grid-template-columns:repeat(6,1fr)}#car .mtools .btn{min-height:56px;font-size:13px}#car .mtabs{margin:8px 0 4px}}
 #car .vlab{text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut);margin-top:16px}
 @media (orientation:landscape) and (max-height:600px){
   #car{padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right))}
@@ -121,20 +131,24 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 
   <div class="sheet" id="sLib">
     <div class="sh"><h2>Music</h2><button class="nl ib tb" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="sb">
-      <div class="row2">
-        <button class="nl btn" id="cAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add songs</button>
-        <button class="nl btn" id="cAddDir"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Add folder</button>
-      </div>
-      <div class="sec">Up next</div>
-      <div class="row2"><button class="nl btn" id="cShuf">Shuffle</button><button class="nl btn" id="cClear">Clear queue</button></div>
-      <div id="cQueue"></div>
-      <div class="sec">Playlists</div>
-      <div id="cLists"></div>
-      <div class="row2"><button class="nl btn" id="cSaveList">Save queue as playlist</button></div>
-      <div class="sec" id="cAllHd">All songs on this phone</div>
-      <div class="row2"><button class="nl btn" id="cPlayAll">Play all songs</button></div>
-      <div id="cAll"></div>
+    <!-- v2.1: every control pinned at the top; only the selected list below scrolls -->
+    <div class="mtools">
+      <button class="nl btn" id="cAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add songs</button>
+      <button class="nl btn" id="cAddDir"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v10H3z"/></svg>Add folder</button>
+      <button class="nl btn" id="cPlayAll"><svg viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z"/></svg>Play all</button>
+      <button class="nl btn" id="cShuf"><svg viewBox="0 0 24 24"><path d="M4 7h4l8 10h4M4 17h4l2.5-3M13.5 10L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg>Shuffle</button>
+      <button class="nl btn" id="cClear"><svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>Clear queue</button>
+      <button class="nl btn" id="cSaveList"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg>Save playlist</button>
+    </div>
+    <div class="mtabs seg" id="cTabs">
+      <button data-tab="q" class="on">Up next <span id="nQ"></span></button>
+      <button data-tab="l">Playlists <span id="nL"></span></button>
+      <button data-tab="a">All songs <span id="nA"></span></button>
+    </div>
+    <div class="mlist" id="cMList">
+      <div data-pane="q"><div id="cQueue"></div></div>
+      <div data-pane="l" hidden><div id="cLists"></div></div>
+      <div data-pane="a" hidden><div id="cAll"></div></div>
     </div>
   </div>
 
@@ -151,7 +165,7 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 'use strict';
 // Daniel Car v2.0: a plain music player. Two <audio> elements (A/B); songs are layered by ramping element.volume.
 // No Web Audio, no AudioContext, no worklets, no analysis, no silent keep-alive clip.
-const VER = 'v2.0';
+const VER = 'v2.1';
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const fmt = s => { s = Math.max(0, s || 0); return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); };
@@ -388,11 +402,21 @@ window.addEventListener('pagehide', saveNow);
 
 // ---------- sheets ----------
 const IC_X = '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>', IC_PL = '<svg viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z"/></svg>';
-function openSheet(id) { document.querySelectorAll('#car .sheet').forEach(s => s.classList.toggle('open', s.id === id)); if (id === 'sLib') renderLib(); if (id === 'sSet') renderSet(); }
+function openSheet(id) { document.querySelectorAll('#car .sheet').forEach(s => s.classList.toggle('open', s.id === id)); if (id === 'sLib') renderLib().then(() => { if (libTab === 'q') scrollToNow(); }); if (id === 'sSet') renderSet(); }
 function closeSheets() { document.querySelectorAll('#car .sheet').forEach(s => s.classList.remove('open')); }
 document.querySelectorAll('#car [data-close]').forEach(b => b.onclick = closeSheets);
 async function lists() { try { const all = await idb('lists', 'readonly', s => s.getAll()); return (all || []).filter(l => l.name !== '__queue').sort((a, b) => a.name.localeCompare(b.name)); } catch (e) { return []; } }
 function row(cls, data, title, sub, btns) { return `<div class="li${cls}" ${data}><div class="t"><b>${esc(title)}</b><small>${esc(sub)}</small></div>${btns}</div>`; }
+let libTab = 'q';
+function showTab(t) {
+  libTab = t;
+  document.querySelectorAll('#cTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('#cMList [data-pane]').forEach(d => { d.hidden = d.dataset.pane !== t; });
+  $('cMList').scrollTop = 0;
+  if (t === 'q') scrollToNow();
+}
+function scrollToNow() { const n = $('cQueue').querySelector('.li.now'); if (n) $('cMList').scrollTop = Math.max(0, n.offsetTop - 8); }
+document.querySelectorAll('#cTabs button').forEach(b => b.addEventListener('click', e => { e.preventDefault(); showTab(b.dataset.tab); }));
 async function renderLib() {
   // up next
   $('cQueue').innerHTML = queue.length ? queue.map((sid, i) => { const s = lib.get(sid); if (!s) return ''; const p = parse(s.name), now = i === idx;
@@ -410,7 +434,7 @@ async function renderLib() {
   $('cLists').querySelectorAll('.li').forEach(r => { const n = r.dataset.l, l = ls.find(x => x.name === n); const go = () => playList(l); r.querySelector('.t').onclick = go; r.querySelector('[data-play]').onclick = go; r.querySelector('[data-del]').onclick = () => delList(n); });
   // all songs on the phone
   const all = [...lib.values()].sort((a, b) => parse(a.name).title.localeCompare(parse(b.name).title, undefined, { numeric: true }));
-  $('cAllHd').textContent = `All songs on this phone · ${all.length}`;
+  $('nQ').textContent = queue.length || ''; $('nL').textContent = ls.length || ''; $('nA').textContent = all.length || '';
   $('cAll').innerHTML = all.length ? all.map(s => { const p = parse(s.name); return row(song(idx) === s ? ' now' : '', `data-s="${esc(s.sid)}"`, p.title, p.artist || ' ', `<button class="nl ib x" data-del aria-label="Delete from phone">${IC_X}</button>`); }).join('') : '<div class="empty2">No songs saved yet.</div>';
   $('cAll').querySelectorAll('.li').forEach(r => {
     const sid = r.dataset.s;
