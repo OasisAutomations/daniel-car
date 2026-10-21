@@ -234,7 +234,7 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 'use strict';
 // Daniel Car v2.0: a plain music player. Two <audio> elements (A/B); songs are layered by ramping element.volume.
 // No Web Audio, no AudioContext, no worklets, no analysis, no silent keep-alive clip.
-const VER = 'v2.2';
+const VER = 'v2.3';
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const fmt = s => { s = Math.max(0, s || 0); return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); };
@@ -307,20 +307,27 @@ const cur = () => els[act], other = () => els[1 - act];
 const P = { playing: false, fade: null };
 function loadInto(el, s) {
   if (el._url) URL.revokeObjectURL(el._url);
+  if (!el.paused) el._self = true;   // swapping the song on a playing element fires 'pause': that one is ours
   el._url = URL.createObjectURL(s.blob); el._sid = s.sid; el._xf = false; el.src = el._url; el.volume = 0;
 }
 function quiet(el) { if (!el.paused) { el._self = true; el.pause(); } el.volume = 0; }
-// fade timer: a Worker (not throttled with the screen off), ~25 steps a second, only while a fade runs
-let ticker = null;
+// v2.3: fade steps come from TWO sources so a frozen / throttled timer can't strand a fade when the app is minimized:
+// a Worker tick (~25 a second) AND every 'timeupdate' of either playing element (~4 a second, delivered by the media pipeline).
+// The curve is computed from the clock, so whichever tick arrives just catches up.
+let ticker = null, tickOn = false;
 function tickStart() {
-  if (ticker) return;
-  try { ticker = new Worker(URL.createObjectURL(new Blob(['setInterval(() => postMessage(0), 40)'], { type: 'text/javascript' }))); ticker.onmessage = fadeStep; ticker._w = true; }
-  catch (e) { ticker = setInterval(fadeStep, 40); }
+  tickOn = true;
+  if (!ticker) {
+    try { ticker = new Worker(URL.createObjectURL(new Blob(["let t=0;onmessage=e=>{clearInterval(t);if(e.data)t=setInterval(()=>postMessage(0),40)}"], { type: 'text/javascript' }))); ticker.onmessage = fadeStep; ticker._w = true; }
+    catch (e) { ticker = { _w: false, id: 0 }; }
+  }
+  if (ticker._w) ticker.postMessage(1); else { clearInterval(ticker.id); ticker.id = setInterval(fadeStep, 40); }
 }
-function tickStop() { if (!ticker) return; if (ticker._w) ticker.terminate(); else clearInterval(ticker); ticker = null; }
+function tickStop() { if (!ticker || !tickOn) return; tickOn = false; if (ticker._w) ticker.postMessage(0); else clearInterval(ticker.id); }
+const FADE_START_MS = 3000;   // the incoming song must actually start within this, or the overlap is dropped
 function fadeStep() {
   const f = P.fade; if (!f) return tickStop();
-  if (!f.t0) return;   // waiting for the incoming song to actually start
+  if (!f.t0) { if (performance.now() - f.asked > FADE_START_MS) fadeFail(f, 'slow start'); return; }   // still waiting for the incoming song
   const x = clamp((performance.now() - f.t0) / f.ms, 0, 1), g = gainOf();
   // equal-power curve: loudness stays even through the overlap
   f.out.volume = clamp(g * Math.cos(x * Math.PI / 2), 0, 1);
@@ -331,25 +338,60 @@ function endFade() {
   const f = P.fade; if (!f) return; P.fade = null; tickStop();
   quiet(f.out); f.in.volume = gainOf(); render();
 }
-// go to queue position i; secs = overlap length (0 = straight switch)
+// the incoming song didn't start (blocked / stalled while minimized): keep the old song playing at full volume;
+// its 'ended' event then hard-switches to the next song on the same element (see the 'ended' handler)
+function fadeFail(f, why) {
+  if (P.fade !== f) return; P.fade = null; tickStop();
+  dbg('fade dropped: ' + why);
+  quiet(f.in); f.in.removeAttribute('src'); try { f.in.load(); } catch (e) {}
+  act = els.indexOf(f.out); idx = f.fromIdx; f.out.volume = gainOf(); f.out._xf = true;
+  showSong(); render(); posState();
+}
+// go to queue position i; secs = overlap length (0 = straight switch on the SAME element)
 function goTo(i, secs) {
   const s = song(i); if (!s) return;
   if (P.fade) endFade();
-  const out = cur(), inn = other(), layer = secs > 0 && P.playing && !out.paused;
+  const out = cur(), inn = other(), layer = secs > 0 && P.playing && !out.paused && !out.ended;
+  if (!layer) {
+    // hard switch: reuse the element that was already playing (it already holds the media session / audio focus)
+    loadInto(out, s); out.volume = gainOf(); quiet(inn); idx = i; P.playing = true;
+    showSong(); render(); saveNow();
+    playEl(out).then(r => { if (r !== true && out === cur() && idx === i) stalled(r); });
+    return;
+  }
+  const fromIdx = idx;
   loadInto(inn, s); act = 1 - act; idx = i;
   showSong();
-  if (!layer) { quiet(out); inn.volume = gainOf(); P.playing = true; playEl(inn); render(); saveNow(); return; }
-  P.fade = { out, in: inn, t0: 0, ms: secs * 1000 }; tickStart();
-  P.playing = true;
-  playEl(inn).then(ok => { if (P.fade && P.fade.in === inn) { if (ok) P.fade.t0 = performance.now(); else endFade(); } });
+  const f = P.fade = { out, in: inn, t0: 0, ms: secs * 1000, asked: performance.now(), fromIdx };
+  tickStart(); P.playing = true;
+  playEl(inn).then(r => { if (P.fade !== f) return; if (r === true) { f.t0 = performance.now(); fadeStep(); } else fadeFail(f, r); });
   render(); saveNow();
 }
+// a song couldn't start at all: show Paused so Play / the steering wheel can start it (and retry when the app comes back)
+function stalled(why) {
+  dbg('start failed: ' + why);
+  P.playing = false; P.retry = true; render(); posState();
+  if (why === 'NotAllowedError' && !document.hidden) toast('Tap Play to start');
+}
 function playEl(el) {
-  return el.play().then(() => true).catch(e => {
-    if (e && e.name === 'NotAllowedError') { P.playing = false; render(); toast('Tap Play to start'); return false; }
-    return false;
+  return el.play().then(() => true).catch(e => (e && e.name) || 'error');
+}
+// test / support hook: last few playback decisions
+const dbgLog = []; function dbg(t) { dbgLog.push(Math.round(performance.now()) + ' ' + t); if (dbgLog.length > 30) dbgLog.shift(); }
+// "unlock" both players on the first tap so either can start later without a fresh gesture (older Android autoplay rules)
+const SILENT = (() => { const n = 800, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' })); })();
+let primed = false;
+function prime() {
+  if (primed) return; primed = true;
+  els.forEach(el => {
+    if (el.getAttribute('src') || !el.paused) return;   // only an idle, empty player
+    el.muted = true; el.src = SILENT;
+    el.play().then(() => { if (el.src === SILENT || el.currentSrc === SILENT) { el._self = true; el.pause(); } }).catch(() => {}).finally(() => { el.muted = false; if (el.getAttribute('src') === SILENT) { el.removeAttribute('src'); try { el.load(); } catch (e) {} } });
   });
 }
+['pointerdown', 'keydown'].forEach(t => document.addEventListener(t, prime, { capture: true, once: true }));
 function nextIndex() { if (!queue.length) return null; if (idx + 1 < queue.length) return idx + 1; return prefs.repeat ? 0 : null; }
 function prevIndex() { if (!queue.length) return null; if (idx > 0) return idx - 1; return prefs.repeat ? queue.length - 1 : null; }
 function play() {
@@ -357,7 +399,7 @@ function play() {
   if (idx < 0 || !cur().src) { return goTo(Math.max(0, idx), 0); }
   P.playing = true; const el = cur(); el.volume = gainOf();
   if (el.ended) el.currentTime = 0;
-  playEl(el); render(); wake();
+  playEl(el).then(r => { if (r !== true && el === cur()) stalled(r); }); render(); wake();
 }
 function pause() {
   P.playing = false; if (P.fade) endFade();
@@ -383,28 +425,35 @@ function seekTo(t) {
 }
 // element events (only the current song's element drives the app; the fading-out one just fades)
 els.forEach(el => {
-  el.addEventListener('timeupdate', () => { if (el === cur()) onTime(el); });
+  el.addEventListener('timeupdate', () => { if (P.fade) fadeStep(); if (el === cur()) onTime(el); });
   el.addEventListener('loadedmetadata', () => { if (el === cur()) { if (el._restore != null) { try { el.currentTime = el._restore; } catch (e) {} el._restore = null; } posState(); render(); } });
-  el.addEventListener('playing', () => { if (el === cur()) { posState(); render(); wake(); } });
+  el.addEventListener('playing', () => { if (el === cur()) { P.retry = false; posState(); render(); wake(); } });
   el.addEventListener('seeked', () => { if (el === cur()) { posState(); render(); } });
   el.addEventListener('pause', () => {
     if (el._self) { el._self = false; if (el === cur()) posState(); return; }
-    if (el === cur() && !el.ended && P.playing) pause();   // Android paused us (phone call, other app): stay paused
+    if (el === cur() && !el.ended && P.playing && !(P.fade && P.fade.in === el && !P.fade.t0)) pause();   // Android paused us (phone call, other app): stay paused
   });
+  // 'ended' is the safety net: whatever happened to timers or the overlap, the next song starts right here
   el.addEventListener('ended', () => {
-    if (P.fade && P.fade.out === el) return endFade();
+    const f = P.fade;
+    if (f && f.out === el) {
+      if (f.t0 && !f.in.paused) return endFade();          // normal: the overlap had already started
+      fadeFail(f, 'old song ended before the new one started');   // fall through to a hard switch
+    }
     if (el !== cur()) return;
     const n = nextIndex();
     if (n == null) { P.playing = false; render(); posState(); return; }
+    dbg('ended -> hard switch to #' + (n + 1) + (document.hidden ? ' (hidden)' : ''));
     goTo(n, 0);
   });
   el.addEventListener('error', () => {
-    if (el !== cur() || !el.getAttribute('src')) return;
-    const s = song(idx); toast(`Couldn't play ${s ? parse(s.name).title : 'that song'}: skipping`);
-    const n = nextIndex(); if (n != null && n !== idx && P.playing) setTimeout(() => goTo(n, 0), 400);
+    if (el !== cur() || !el.getAttribute('src') || el.getAttribute('src') === SILENT) return;
+    const s = song(idx); if (!document.hidden) toast(`Couldn't play ${s ? parse(s.name).title : 'that song'}: skipping`);
+    const n = nextIndex(); if (n != null && n !== idx && P.playing) goTo(n, 0);
   });
 });
 let nowSaveT = 0;
+const HIDDEN_XF = 3;
 function onTime(el) {
   const d = el.duration;
   if (!seeking && isFinite(d) && d > 0) { const p = el.currentTime; $('cSeek').value = Math.round(p / d * 1000); $('cSeek').style.setProperty('--v', (p / d * 100).toFixed(2) + '%'); $('cEl').textContent = fmt(p); $('cRem').textContent = '-' + fmt(d - p); }
@@ -412,8 +461,9 @@ function onTime(el) {
   if (performance.now() - nowSaveT > 15000) { nowSaveT = performance.now(); saveNow(); }
   // auto layered crossfade: start the next song this many seconds before the end
   if (!P.playing || P.fade || el._xf || !prefs.xf || !isFinite(d) || d < 8) return;
-  const len = Math.min(prefs.xf, d / 3), left = d - el.currentTime;
-  if (left <= len) { const n = nextIndex(); el._xf = true; if (n != null) goTo(n, Math.max(0.5, left - 0.1)); }
+  // minimized: a short overlap (timeupdate may only arrive about once a second there); full length when the screen is on
+  const len = Math.min(document.hidden ? Math.min(prefs.xf, HIDDEN_XF) : prefs.xf, d / 3), left = d - el.currentTime;
+  if (left <= len) { const n = nextIndex(); el._xf = true; if (n != null) { dbg('crossfade ' + Math.max(0.5, left - 0.1).toFixed(1) + ' s' + (document.hidden ? ' (hidden)' : '')); goTo(n, Math.max(0.5, left - 0.1)); } }
 }
 
 // ---------- media session (car display + steering-wheel buttons) ----------
@@ -469,7 +519,11 @@ async function wake() {
   if (want && !wl) { try { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } catch (e) {} }
   else if (!want && wl) { const l = wl; wl = null; l.release().catch(() => {}); }
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); wake(); vizKick(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) saveNow();
+  else if (P.retry && cur().getAttribute('src')) { P.retry = false; play(); }   // a song that couldn't start while minimized: start it now
+  wake(); vizKick(); dashClockRun();
+});
 window.addEventListener('pagehide', saveNow);
 
 // ---------- sheets ----------
@@ -570,7 +624,7 @@ function openDash() {
   const d = $('dash'); d.hidden = false; dash.ctl = true; d.classList.remove('noctl');
   try { history.pushState({ dash: 1 }, ''); } catch (e) {}
   try { if (document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {}
-  dashApply(); dashSync(); dashClock(); clearInterval(dash.clockT); dash.clockT = setInterval(dashClock, 1000);
+  dashApply(); dashSync(); dashClock(); dashClockRun();
   const el = cur(); if (isFinite(el.duration) && el.duration > 0) dashTime(el.currentTime, el.duration);
   vizSize(); vizKick(); wake();
 }
@@ -587,6 +641,7 @@ function dashApply() {
   $('dVizB').textContent = prefs.dashViz ? 'Pulse on' : 'Pulse off'; $('dBpm').textContent = Math.round(prefs.bpm);
   viz.last = 0; vizKick(true);
 }
+function dashClockRun() { clearInterval(dash.clockT); dash.clockT = 0; if (dash.open && !document.hidden) { dashClock(); dash.clockT = setInterval(dashClock, 1000); } }   // no clock timer while minimized
 function dashSync() {
   if (!dash.open) return;
   const s = song(idx), p = s ? parse(s.name) : null;
