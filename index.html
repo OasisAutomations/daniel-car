@@ -91,6 +91,47 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 #car .mtabs span{opacity:.7;margin-left:4px}
 #car .mlist{position:relative;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 2px 24px;border-top:1px solid rgba(217,255,210,.12)}
 @media (orientation:landscape) and (max-height:600px){#car .mtools{grid-template-columns:repeat(6,1fr)}#car .mtools .btn{min-height:56px;font-size:13px}#car .mtabs{margin:8px 0 4px}}
+/* v2.2 dash mode: night colors, static styling (only the canvas moves) */
+#car #dash{position:absolute;inset:0;z-index:6;background:#010201;display:flex;flex-direction:column;overflow:hidden;
+  padding:max(14px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+  --dk:rgba(196,255,184,.80);--dm:rgba(170,232,160,.46);--dl:rgba(190,255,175,.55);--dg:rgba(57,255,20,.16)}
+#car #dash[hidden]{display:none}
+#car #dash.xdim{--dk:rgba(170,235,160,.42);--dm:rgba(150,210,140,.26);--dl:rgba(170,235,160,.30);--dg:rgba(57,255,20,.07)}
+#car #dViz{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#car #dash.noviz #dViz{display:none}
+#car #dash .dtop,#car #dash .dmain,#car #dash .dhint{position:relative;z-index:1}
+#car #dash .nl{border-color:var(--dl);box-shadow:0 0 1px var(--dl),0 0 10px var(--dg),inset 0 0 5px var(--dg)}
+#car #dash .nl:active{box-shadow:0 0 2px var(--dk),0 0 14px rgba(57,255,20,.3)}
+#car #dash .nl svg{stroke:var(--dk);filter:none}
+#car .dtop{display:flex;align-items:center;gap:12px;min-height:56px}
+#car .dsp{flex:1}
+#car .dbtn{width:56px;height:56px;flex:none}
+#car .dpill{min-height:52px;padding:0 18px;display:flex!important;align-items:center;font-size:15px;letter-spacing:.08em;color:var(--dk)}
+#car .dmain{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between;gap:18px;padding-top:4vh}
+#car .dinfo{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;min-width:0}
+#car .dclock{font-size:clamp(84px,27vw,190px);font-weight:200;line-height:.95;letter-spacing:-.03em;color:var(--dk);font-variant-numeric:tabular-nums;text-shadow:0 0 22px var(--dg)}
+#car .dclock small{font-size:.2em;letter-spacing:.1em;margin-left:.3em;color:var(--dm);font-weight:400}
+#car .ddate{font-size:15px;letter-spacing:.24em;text-transform:uppercase;color:var(--dm);margin-bottom:3vh}
+#car .dttl{font-size:clamp(26px,7.4vw,44px);font-weight:600;line-height:1.12;color:var(--dk);max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+#car .dart{font-size:clamp(17px,4.6vw,24px);color:var(--dm);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:1.2em}
+#car .dprog{align-self:stretch;height:3px;border-radius:3px;background:rgba(190,255,175,.10);margin-top:14px;overflow:hidden}
+#car .dprog i{display:block;height:100%;width:0;background:var(--dk);box-shadow:0 0 6px var(--dg)}
+#car .dtimes{align-self:stretch;display:flex;justify-content:space-between;font-size:14px;color:var(--dm);font-variant-numeric:tabular-nums}
+#car .dctrl{display:flex;align-items:center;justify-content:center;gap:clamp(20px,7vw,44px);padding-bottom:2vh}
+#car .dsk{width:clamp(88px,23vw,112px);height:clamp(88px,23vw,112px)}
+#car .dpp{width:clamp(128px,35vw,160px);height:clamp(128px,35vw,160px);border-width:2px}
+#car .dpp svg{width:38%;height:38%}
+#car .dhint{position:absolute;left:0;right:0;bottom:max(16px,env(safe-area-inset-bottom));text-align:center;font-size:13px;letter-spacing:.14em;color:var(--dm);opacity:0;pointer-events:none}
+#car #dash.noctl .dctl{opacity:0;pointer-events:none}
+#car #dash.noctl .dhint{opacity:.6}
+@media (orientation:landscape){
+  #car .dmain{display:grid;grid-template-columns:1fr 1fr;align-items:center;padding-top:0;gap:28px}
+  #car .dclock{font-size:clamp(72px,24vh,170px)}
+  #car .ddate{margin-bottom:2vh}
+  #car .dttl{font-size:clamp(22px,6vh,40px)}
+  #car .dctrl{padding-bottom:0;gap:clamp(40px,8vw,64px)}
+  #car .dsk{width:clamp(68px,19vh,80px);height:clamp(68px,19vh,80px)}#car .dpp{width:clamp(100px,28vh,120px);height:clamp(100px,28vh,120px)}
+}
 #car .vlab{text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut);margin-top:16px}
 @media (orientation:landscape) and (max-height:600px){
   #car{padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right))}
@@ -105,6 +146,7 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
   <div class="cbar">
     <span class="brand">DANIEL&nbsp;CAR</span>
     <span class="pill" id="cPill">Tap Music to add songs</span>
+    <button class="nl ib tb" id="cDash" aria-label="Dash mode"><svg viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.2-5.2"/><path d="M6.2 12.2l1.3.8M12 6.5V8M17.8 12.2l-1.3.8"/></svg></button>
     <button class="nl ib tb" id="cLib" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h7"/><path d="M19 16.5V5l3 1.5"/><circle cx="17" cy="17" r="2.2"/></svg></button>
     <button class="nl ib tb" id="cSet" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
   </div>
@@ -128,6 +170,33 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
     </div>
   </div>
   <div class="toast" id="cToast"></div>
+
+  <!-- v2.2 Dash mode: full-screen night-drive screen. The visualizer is pure drawing (no audio analysis). -->
+  <div id="dash" hidden>
+    <canvas id="dViz" aria-hidden="true"></canvas>
+    <div class="dtop dctl">
+      <button class="nl ib dbtn" id="dClose" aria-label="Exit dash mode"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <span class="dsp"></span>
+      <button class="nl dpill" id="dVizB">Pulse on</button>
+      <button class="nl dpill" id="dTap" aria-label="Tap tempo">TAP&nbsp;·&nbsp;<span id="dBpm">120</span></button>
+    </div>
+    <div class="dmain">
+      <div class="dinfo">
+        <div class="dclock"><span id="dClock">--:--</span><small id="dAmpm"></small></div>
+        <div class="ddate" id="dDate"></div>
+        <div class="dttl" id="dTitle">Daniel Car</div>
+        <div class="dart" id="dArtist"></div>
+        <div class="dprog"><i id="dProg"></i></div>
+        <div class="dtimes"><span id="dEl">0:00</span><span id="dRem">-0:00</span></div>
+      </div>
+      <div class="dctrl dctl">
+        <button class="nl ib dsk" id="dPrev" aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M19 5.5v13L9 12z"/></svg></button>
+        <button class="nl ib dpp" id="dPlay" aria-label="Play"><svg viewBox="0 0 24 24" id="dPlayIc"><path d="M8 5.2v13.6L19 12z"/></svg></button>
+        <button class="nl ib dsk" id="dNext" aria-label="Next"><svg viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M5 5.5v13L15 12z"/></svg></button>
+      </div>
+    </div>
+    <div class="dhint">Tap anywhere for controls</div>
+  </div>
 
   <div class="sheet" id="sLib">
     <div class="sh"><h2>Music</h2><button class="nl ib tb" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -165,7 +234,7 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 'use strict';
 // Daniel Car v2.0: a plain music player. Two <audio> elements (A/B); songs are layered by ramping element.volume.
 // No Web Audio, no AudioContext, no worklets, no analysis, no silent keep-alive clip.
-const VER = 'v2.1';
+const VER = 'v2.2';
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const fmt = s => { s = Math.max(0, s || 0); return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); };
@@ -173,7 +242,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
 // settings (volume + repeat carry over from v1)
 const old = store.get('dcar-prefs', {}) || {};
-const prefs = Object.assign({ vol: typeof old.vol === 'number' ? old.vol : 85, repeat: old.repeat !== false, xf: 6, wake: true }, store.get('dcar2-prefs', {}));
+const prefs = Object.assign({ vol: typeof old.vol === 'number' ? old.vol : 85, repeat: old.repeat !== false, xf: 6, wake: true, dashAuto: false, dashViz: true, bpm: 120, dim: false, fps: 30 }, store.get('dcar2-prefs', {}));
 const savePrefs = () => store.set('dcar2-prefs', prefs);
 const gainOf = () => { const v = clamp(prefs.vol / 100, 0, 1); return v * v; };
 function parse(name) {
@@ -339,6 +408,7 @@ let nowSaveT = 0;
 function onTime(el) {
   const d = el.duration;
   if (!seeking && isFinite(d) && d > 0) { const p = el.currentTime; $('cSeek').value = Math.round(p / d * 1000); $('cSeek').style.setProperty('--v', (p / d * 100).toFixed(2) + '%'); $('cEl').textContent = fmt(p); $('cRem').textContent = '-' + fmt(d - p); }
+  if (dash.open && isFinite(d) && d > 0) dashTime(el.currentTime, d);
   if (performance.now() - nowSaveT > 15000) { nowSaveT = performance.now(); saveNow(); }
   // auto layered crossfade: start the next song this many seconds before the end
   if (!P.playing || P.fade || el._xf || !prefs.xf || !isFinite(d) || d < 8) return;
@@ -358,6 +428,7 @@ function showSong() {
   const n = nextIndex(), ns = n != null && n !== idx ? song(n) : null, np = ns ? parse(ns.name) : null;
   $('cNext').innerHTML = np ? `Next&nbsp;&nbsp;<span>${esc(np.title)}</span>${np.artist ? ' · ' + esc(np.artist) : ''}` : '';
   if ($('sLib').classList.contains('open')) renderLib();
+  dashSync();
 }
 function posState() {
   if (!ms) return; const el = cur();
@@ -377,10 +448,11 @@ if (ms) {
 const IC_PAUSE = '<path d="M9 5.5v13M15 5.5v13"/>', IC_PLAY = '<path d="M8 5.2v13.6L19 12z"/>';
 let shownPlaying = null;
 function render() {
-  if (shownPlaying !== P.playing) { shownPlaying = P.playing; $('cPlayIc').innerHTML = P.playing ? IC_PAUSE : IC_PLAY; $('cPlay').setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); }
+  if (shownPlaying !== P.playing) { const was = shownPlaying; shownPlaying = P.playing; $('cPlayIc').innerHTML = $('dPlayIc').innerHTML = P.playing ? IC_PAUSE : IC_PLAY; $('cPlay').setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); $('dPlay').setAttribute('aria-label', P.playing ? 'Pause' : 'Play'); if (P.playing && was === false && prefs.dashAuto && !dash.open) openDash(); }
   const xf = prefs.xf ? `crossfade ${prefs.xf} s` : 'no crossfade';
   $('cPill').innerHTML = !queue.length ? 'Tap Music to add songs' : P.fade ? '<b>Crossfading</b>' : P.playing ? `<b>Playing</b> · ${xf}` : `Paused · ${queue.length} songs`;
   if (!queue.length) { $('cTitle').textContent = 'Daniel Car'; $('cArtist').textContent = 'Tap Music to add your songs'; $('cMeta').textContent = ''; $('cNext').innerHTML = ''; }
+  dashSync(); vizKick();
 }
 let seeking = false;
 $('cSeek').addEventListener('input', e => { seeking = true; const el = cur(), d = el.duration; if (isFinite(d)) { const t = e.target.value / 1000 * d; $('cEl').textContent = fmt(t); $('cRem').textContent = '-' + fmt(d - t); e.target.style.setProperty('--v', e.target.value / 10 + '%'); } });
@@ -393,11 +465,11 @@ $('cVol').addEventListener('change', savePrefs);
 let wl = null;
 async function wake() {
   if (!('wakeLock' in navigator)) return;
-  const want = prefs.wake && P.playing && document.visibilityState === 'visible';
+  const want = document.visibilityState === 'visible' && ((prefs.wake && P.playing) || dash.open);   // dash mode always keeps the screen on
   if (want && !wl) { try { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } catch (e) {} }
   else if (!want && wl) { const l = wl; wl = null; l.release().catch(() => {}); }
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); wake(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveNow(); wake(); vizKick(); });
 window.addEventListener('pagehide', saveNow);
 
 // ---------- sheets ----------
@@ -470,11 +542,18 @@ function renderSet() {
     SEG('xf', 'Crossfade', 'Layers the next song in this many seconds before the current one ends. Next / Back always use a quick 1.5 s blend.', [[0, 'Off'], [3, '3 s'], [6, '6 s'], [10, '10 s']]) +
     SEG('repeat', 'Repeat queue', 'Start again from the top when the queue ends.', [[true, 'On'], [false, 'Off']]) +
     SEG('wake', 'Keep screen on while playing', '', [[true, 'On'], [false, 'Off']]) +
+    `<div class="sec">Dash mode</div><div class="row2"><button class="nl btn" id="sDash">Open dash mode</button></div>` +
+    SEG('dashAuto', 'Open dash automatically on play', '', [[false, 'Off'], [true, 'On']]) +
+    SEG('dashViz', 'Pulse visualizer', 'A drawn animation at a steady tempo (it does not listen to the music). Swells during crossfades, rests when paused.', [[true, 'On'], [false, 'Off']]) +
+    SEG('bpm', 'Pulse tempo', 'Or tap TAP in dash mode along with the beat.', [[90, '90'], [100, '100'], [120, '120'], [128, '128'], [140, '140']]) +
+    SEG('dim', 'Extra dim', 'Even darker for night driving.', [[false, 'Off'], [true, 'On']]) +
+    SEG('fps', 'Animation frame rate', '30 fps saves battery.', [[30, '30 fps'], [60, 'Smooth']]) +
     `<div class="vlab">DANIEL CAR ${VER}</div>`;
   $('cSettings').querySelectorAll('.seg').forEach(g => g.querySelectorAll('button').forEach(b => b.onclick = () => {
     const k = g.dataset.k; let v = b.dataset.v; v = v === 'true' ? true : v === 'false' ? false : +v;
-    prefs[k] = v; savePrefs(); g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); render(); showSong(); wake();
+    prefs[k] = v; savePrefs(); g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); dashApply(); render(); showSong(); wake();
   }));
+  $('sDash').onclick = e => { e.preventDefault(); openDash(); };
 }
 function shuffle() {
   const head = queue.slice(0, idx + 1), rest = queue.slice(idx + 1);
@@ -482,10 +561,122 @@ function shuffle() {
   queue = head.concat(rest); saveQueue(); showSong(); renderLib(); toast('Shuffled');
 }
 
+// ---------- v2.2 dash mode ----------
+// The pulse is drawn from a clock at a set tempo; nothing reads the audio (no Web Audio / analyser / captureStream).
+const dash = { open: false, ctl: true, clockT: 0, taps: [] };
+const viz = { raf: 0, last: 0, e: 0, t0: performance.now() / 1000, w: 0, h: 0, dpr: 1, ctx: null };
+function openDash() {
+  if (dash.open) return; dash.open = true; closeSheets();
+  const d = $('dash'); d.hidden = false; dash.ctl = true; d.classList.remove('noctl');
+  try { history.pushState({ dash: 1 }, ''); } catch (e) {}
+  try { if (document.fullscreenEnabled && !document.fullscreenElement) document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {}
+  dashApply(); dashSync(); dashClock(); clearInterval(dash.clockT); dash.clockT = setInterval(dashClock, 1000);
+  const el = cur(); if (isFinite(el.duration) && el.duration > 0) dashTime(el.currentTime, el.duration);
+  vizSize(); vizKick(); wake();
+}
+function closeDash(fromPop) {
+  if (!dash.open) return;
+  if (!fromPop && history.state && history.state.dash) { history.back(); return; }   // -> popstate closes it
+  dash.open = false; $('dash').hidden = true; clearInterval(dash.clockT); vizStop();
+  try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+  wake();
+}
+window.addEventListener('popstate', () => { if (dash.open) closeDash(true); });
+function dashApply() {
+  const d = $('dash'); d.classList.toggle('xdim', !!prefs.dim); d.classList.toggle('noviz', !prefs.dashViz);
+  $('dVizB').textContent = prefs.dashViz ? 'Pulse on' : 'Pulse off'; $('dBpm').textContent = Math.round(prefs.bpm);
+  viz.last = 0; vizKick(true);
+}
+function dashSync() {
+  if (!dash.open) return;
+  const s = song(idx), p = s ? parse(s.name) : null;
+  const set = (id, t) => { const e = $(id); if (e.textContent !== t) e.textContent = t; };
+  set('dTitle', p ? p.title : 'Daniel Car'); set('dArtist', p ? p.artist || ' ' : (queue.length ? 'Press play' : 'Add music from the player'));
+}
+function dashTime(t, d) { $('dProg').style.width = clamp(t / d * 100, 0, 100).toFixed(2) + '%'; $('dEl').textContent = fmt(t); $('dRem').textContent = '-' + fmt(d - t); }
+function dashClock() {
+  const now = new Date(), parts = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).formatToParts(now);
+  const hm = parts.filter(x => x.type !== 'dayPeriod').map(x => x.value).join('').trim(), ap = (parts.find(x => x.type === 'dayPeriod') || {}).value || '';
+  if ($('dClock').textContent !== hm) $('dClock').textContent = hm; if ($('dAmpm').textContent !== ap) $('dAmpm').textContent = ap;
+  const dt = now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }); if ($('dDate').textContent !== dt) $('dDate').textContent = dt;
+}
+function tapTempo() {
+  const now = performance.now(), T = dash.taps;
+  if (T.length && now - T[T.length - 1] > 2000) T.length = 0;
+  T.push(now); if (T.length > 8) T.shift();
+  if (T.length < 2) { $('dBpm').textContent = '…'; return; }
+  const iv = (T[T.length - 1] - T[0]) / (T.length - 1);
+  prefs.bpm = clamp(Math.round(60000 / iv), 50, 200); savePrefs();
+  viz.t0 = now / 1000;   // the pulse lands on your taps
+  $('dBpm').textContent = prefs.bpm; vizKick();
+}
+function vizSize() {
+  const c = $('dViz'), r = c.getBoundingClientRect(); viz.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  viz.w = Math.max(1, r.width); viz.h = Math.max(1, r.height);
+  c.width = Math.round(viz.w * viz.dpr); c.height = Math.round(viz.h * viz.dpr);
+  viz.ctx = c.getContext('2d'); viz.ctx.setTransform(viz.dpr, 0, 0, viz.dpr, 0, 0); viz.last = 0;
+  // place the rings in open space: portrait = between the progress bar and the buttons, landscape = a halo around Play
+  const pp = $('dPlay').getBoundingClientRect(), tm = $('dEl').getBoundingClientRect(), ct = document.querySelector('#dash .dctrl').getBoundingClientRect();
+  if (viz.w > viz.h) { const nb = $('dNext').getBoundingClientRect(); viz.cx = pp.left + pp.width / 2 - r.left; viz.cy = pp.top + pp.height / 2 - r.top; viz.R = Math.max((pp.width / 2 + 4) / 0.78, (nb.left - (pp.left + pp.width / 2) - 6) / 1.43); }   // halo between Play and the skip buttons
+  else { const top = tm.bottom - r.top + 8, bot = ct.top - r.top - 8; viz.cx = viz.w / 2; viz.cy = (top + bot) / 2; viz.R = clamp(Math.min((bot - top) / 2 / 1.42, viz.w * 0.3), 40, viz.w * 0.3); }
+}
+window.addEventListener('resize', () => { if (dash.open) { vizSize(); vizKick(true); } });
+function vizStop() { if (viz.raf) cancelAnimationFrame(viz.raf); viz.raf = 0; }
+// start the frame loop if something should move; once paused it eases to rest and stops by itself
+function vizKick(redraw) {
+  if (!dash.open || !prefs.dashViz || document.hidden) return vizStop();
+  if (!viz.raf) viz.raf = requestAnimationFrame(vizFrame);
+  if (redraw && !viz.raf) viz.raf = requestAnimationFrame(vizFrame);
+}
+function vizFrame(ts) {
+  viz.raf = 0;
+  if (!dash.open || !prefs.dashViz || document.hidden || !viz.ctx) return;
+  const minDt = prefs.fps >= 60 ? 0 : 1000 / 30 - 2;
+  const live = P.playing && !cur().paused || !!(P.fade && P.fade.t0);
+  if (viz.last && ts - viz.last < minDt) { viz.raf = requestAnimationFrame(vizFrame); return; }
+  const dt = viz.last ? Math.min(0.1, (ts - viz.last) / 1000) : 0.033; viz.last = ts;
+  viz.e += ((live ? 1 : 0) - viz.e) * Math.min(1, dt * 4);   // ~0.25 s ease in / out
+  vizDraw(ts / 1000);
+  if (live || viz.e > 0.004) viz.raf = requestAnimationFrame(vizFrame); else { viz.e = 0; vizDraw(ts / 1000); }
+}
+function vizDraw(t) {
+  const g = viz.ctx, w = viz.w, h = viz.h;
+  g.clearRect(0, 0, w, h);
+  const cx = viz.cx, cy = viz.cy, R = viz.R;
+  const ph = ((t - viz.t0) * prefs.bpm / 60) % 1, beat = ph < 0 ? 0 : ph < 0.06 ? ph / 0.06 : Math.exp(-(ph - 0.06) * 4.2);
+  let swell = 1; if (P.fade && P.fade.t0) { const x = clamp((performance.now() - P.fade.t0) / P.fade.ms, 0, 1); swell = 1 + 0.85 * Math.sin(Math.PI * x); }
+  const e = viz.e, amp = e * (0.35 + 0.65 * beat) * swell, B = prefs.dim ? 0.45 : 1;
+  viz.amp = amp;
+  // rings
+  for (let k = 0; k < 3; k++) {
+    const rr = R * (0.78 + 0.16 * k) + R * 0.07 * amp * (1 - k * 0.25);
+    g.beginPath(); g.arc(cx, cy, rr, 0, Math.PI * 2);
+    g.strokeStyle = `rgba(57,255,20,${(0.035 + 0.05 * amp) * B})`; g.lineWidth = 7; g.stroke();
+    g.strokeStyle = `rgba(200,255,190,${(0.07 + 0.16 * amp) * B * (1 - k * 0.22)})`; g.lineWidth = 1.2; g.stroke();
+  }
+  // radial bars
+  const N = 56; g.beginPath();
+  for (let i = 0; i < N; i++) {
+    const a = i / N * Math.PI * 2 - Math.PI / 2, n = 0.5 + 0.5 * Math.sin(i * 0.9 + t * 1.7) * Math.sin(i * 0.37 - t * 0.9);
+    const r0 = R * 1.18, len = R * (0.03 + 0.22 * amp * (0.35 + 0.65 * n));
+    const ca = Math.cos(a), sa = Math.sin(a); g.moveTo(cx + ca * r0, cy + sa * r0); g.lineTo(cx + ca * (r0 + len), cy + sa * (r0 + len));
+  }
+  g.lineCap = 'round';
+  g.strokeStyle = `rgba(57,255,20,${(0.05 + 0.08 * amp) * B})`; g.lineWidth = 6; g.stroke();
+  g.strokeStyle = `rgba(210,255,200,${(0.10 + 0.28 * amp) * B})`; g.lineWidth = 1.6; g.stroke();
+}
+$('dash').addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  dash.ctl = !dash.ctl; $('dash').classList.toggle('noctl', !dash.ctl);
+});
+const dpress = (id, fn) => $(id).addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); fn(); });
+dpress('dClose', () => closeDash()); dpress('dPlay', () => toggle()); dpress('dPrev', () => back()); dpress('dNext', () => next());
+dpress('dTap', tapTempo); dpress('dVizB', () => { prefs.dashViz = !prefs.dashViz; savePrefs(); dashApply(); });
+
 // ---------- wiring ----------
 const press = (id, fn) => $(id).addEventListener('click', e => { e.preventDefault(); fn(); });
 press('cPlay', toggle); press('cNextB', next); press('cPrev', back);
-press('cLib', () => openSheet('sLib')); press('cSet', () => openSheet('sSet'));
+press('cLib', () => openSheet('sLib')); press('cDash', openDash); press('cSet', () => openSheet('sSet'));
 press('cAdd', () => $('cFile').click()); press('cAddDir', () => $('cDir').click());
 press('cShuf', shuffle); press('cSaveList', saveList);
 press('cClear', () => { if (!confirm('Clear the queue? (Songs and playlists stay on the phone.)')) return; const s = song(idx); queue = s ? [s.sid] : []; idx = s ? 0 : -1; saveQueue(); showSong(); render(); renderLib(); });
