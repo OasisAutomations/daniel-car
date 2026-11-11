@@ -1103,6 +1103,7 @@ function rowHTML(it, i) {
   }
   const s = song(idx), now = s && s.r === it, tags = [];
   if (it.c !== 'm' && (BR.q || BR.ct === 'm')) tags.push(CTN[it.c]);
+  if (it.fl & 8) tags.push('video');
   if (it.cf === 'l') tags.push('unsure');
   if (it.fresh) tags.push('new');
   if (!it.file && LX.files) tags.push('not on phone');
