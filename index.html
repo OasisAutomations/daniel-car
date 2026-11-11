@@ -132,6 +132,44 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
   #car .dctrl{padding-bottom:0;gap:clamp(40px,8vw,64px)}
   #car .dsk{width:clamp(68px,19vh,80px);height:clamp(68px,19vh,80px)}#car .dpp{width:clamp(100px,28vh,120px);height:clamp(100px,28vh,120px)}
 }
+/* v2.4 library: search-first, big touch targets, virtual list */
+#car .bsearch{flex:none;display:flex}
+#car .bsearch input{all:unset;box-sizing:border-box;flex:1;min-width:0;height:60px;padding:0 20px;border:1.5px solid var(--core);border-radius:16px;font-size:19px;color:var(--ink);box-shadow:var(--glow);user-select:text;-webkit-user-select:text}
+#car .bsearch input::placeholder{color:var(--mut)}
+#car .ctabs,#car .stabs,#car .recent,#car .decs{flex:none;display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+#car .ctabs::-webkit-scrollbar,#car .stabs::-webkit-scrollbar,#car .recent::-webkit-scrollbar,#car .decs::-webkit-scrollbar{display:none}
+#car .ctabs{margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr)}#car .ctabs button{min-width:0;min-height:60px;padding:4px 6px;font-size:15px;flex-direction:column;gap:2px;line-height:1.12;white-space:normal;text-align:center}
+@media (orientation:portrait){#car .cbar{gap:10px}#car .brand{min-width:0;overflow:hidden;white-space:nowrap;letter-spacing:.2em}#car .tb{width:54px;height:54px}}
+#car .ctabs span{font-size:12px;opacity:.65}
+#car .stabs{margin-top:10px}#car .stabs button{flex:0 0 auto;min-height:50px;padding:0 18px;font-size:15px}
+#car .stabs[hidden],#car .recent[hidden],#car .bhead[hidden],#car .az[hidden],#car .cimg[hidden],#car .azpop[hidden]{display:none}
+#car .bstat{flex:none;font-size:13px;color:var(--mut);margin:8px 2px 0;display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap}
+#car .bstat button{min-height:44px;padding:0 16px;border:1px solid rgba(217,255,210,.45);border-radius:12px;color:var(--ink);font-size:14px;display:flex!important;align-items:center}
+#car .recent{margin-top:10px;align-items:stretch}
+#car .recent small{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);text-align:center}
+#car .recent button{flex:0 0 auto;max-width:200px;min-height:52px;padding:6px 14px;border:1px solid rgba(217,255,210,.25);border-radius:14px;font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block!important}
+#car .recent button i{display:block;font-style:normal;font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis}
+#car .bhead{flex:none;display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+#car .bhead h3{flex:1;margin:0;font-size:15px;font-weight:400;color:var(--mut)}
+#car .bhead .hb{flex:1 1 120px;min-height:56px}
+#car .decs{flex-basis:100%}#car .decs button{flex:0 0 auto;min-height:46px;padding:0 14px;font-size:14px}
+#car .bwrap{position:relative;flex:1;min-height:0;margin-top:10px;border-top:1px solid rgba(217,255,210,.12)}
+#car .vl{position:absolute;top:0;bottom:0;left:0;right:40px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#car .vl.noaz{right:0}
+#car .vl .sp{position:relative}
+#car .vl .li{position:absolute;left:0;right:0;height:68px;min-height:0;padding:6px 4px}
+#car .vl .li.off{opacity:.45}
+#car .vl .li .t small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#car .tag{display:inline-block;font-size:11px;line-height:1.3;padding:0 6px;border:1px solid rgba(217,255,210,.4);border-radius:6px;margin-right:6px;color:var(--ink)}
+#car .li .fav.on svg{fill:var(--core)}
+#car .az{position:absolute;top:0;bottom:0;right:0;width:40px;display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:600;color:rgba(220,240,215,.22);touch-action:none;padding:2px 0}
+#car .az span{flex:1;display:flex;align-items:center;justify-content:center;width:100%}
+#car .az span.on{color:var(--core)}
+#car .azpop{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:20px;display:grid;place-items:center;font-size:52px;background:rgba(5,8,6,.94);border:1.5px solid var(--core);box-shadow:var(--glow);z-index:3;pointer-events:none}
+#car .pick{position:absolute;inset:0;z-index:8;background:#040605;display:none;flex-direction:column;padding:max(18px,env(safe-area-inset-top)) 22px max(18px,env(safe-area-inset-bottom))}
+#car .pick.open{display:flex}
+#car .pick .sb .btn{flex:none}
+#car .cimg{width:clamp(64px,18vw,104px);height:clamp(64px,18vw,104px);border-radius:12px;object-fit:cover;border:1px solid rgba(217,255,210,.25);flex:none}
 #car .vlab{text-align:center;font-size:12px;letter-spacing:.2em;color:var(--mut);margin-top:16px}
 @media (orientation:landscape) and (max-height:600px){
   #car{padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right))}
@@ -147,11 +185,13 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
     <span class="brand">DANIEL&nbsp;CAR</span>
     <span class="pill" id="cPill">Tap Music to add songs</span>
     <button class="nl ib tb" id="cDash" aria-label="Dash mode"><svg viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="M12 17l4.2-5.2"/><path d="M6.2 12.2l1.3.8M12 6.5V8M17.8 12.2l-1.3.8"/></svg></button>
+    <button class="nl ib tb" id="cBrw" aria-label="Library"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></button>
     <button class="nl ib tb" id="cLib" aria-label="Music"><svg viewBox="0 0 24 24"><path d="M4 6h11M4 12h11M4 18h7"/><path d="M19 16.5V5l3 1.5"/><circle cx="17" cy="17" r="2.2"/></svg></button>
     <button class="nl ib tb" id="cSet" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
   </div>
   <div class="cmain">
     <div class="info">
+      <img class="cimg" id="cImg" alt="" hidden>
       <div class="meta" id="cMeta"></div>
       <div class="ttl" id="cTitle">Ready to roll</div>
       <div class="art" id="cArtist">Add your music, then press play</div>
@@ -221,6 +261,22 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
     </div>
   </div>
 
+  <div class="sheet" id="sBrw">
+    <div class="sh"><button class="nl ib tb" id="bBack" aria-label="Back" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="bTitle">Library</h2><button class="nl ib tb" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="bsearch"><input id="bQ" type="search" placeholder="Search songs, artists, albums" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>
+    <div class="ctabs seg" id="bCT"></div>
+    <div class="stabs seg" id="bST"></div>
+    <div class="bstat" id="bStat"></div>
+    <div class="recent" id="bRecent" hidden></div>
+    <div class="bhead" id="bHead" hidden></div>
+    <div class="bwrap"><div class="vl" id="bList"><div class="sp" id="bSp"></div></div><div class="az" id="bAZ" hidden></div><div class="azpop" id="bAZPop" hidden></div></div>
+  </div>
+  <div class="pick" id="bPick">
+    <div class="sh"><h2 id="bPickT"></h2><button class="nl ib tb" data-x aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sb" id="bPickL"></div>
+  </div>
+  <input type="file" id="bIdx" hidden>
+
   <div class="sheet" id="sSet">
     <div class="sh"><h2>Settings</h2><button class="nl ib tb" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="sb" id="cSettings"></div>
@@ -234,7 +290,7 @@ body{background:var(--bgc);overflow:hidden;color:var(--ink);font:400 16px/1.35 I
 'use strict';
 // Daniel Car v2.0: a plain music player. Two <audio> elements (A/B); songs are layered by ramping element.volume.
 // No Web Audio, no AudioContext, no worklets, no analysis, no silent keep-alive clip.
-const VER = 'v2.3';
+const VER = 'v2.4';
 const $ = id => document.getElementById(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const fmt = s => { s = Math.max(0, s || 0); return Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0'); };
@@ -276,12 +332,12 @@ async function idb(name, mode, fn) {
 }
 const lib = new Map();   // sid -> { sid, name, blob, added }
 let queue = [], idx = -1;  // queue = song ids in play order, idx = current song
-const song = i => lib.get(queue[i]) || null;
+const song = i => getSong(queue[i]);
 const sidOf = f => `${f.name}|${f.size}|${f.lastModified || 0}`;
 const isAudio = f => /^audio\//.test(f.type || '') || /\.(mp3|wav|m4a|aac|ogg|flac|opus)$/i.test(f.name || '');
 let qSaveT = 0;
 function saveQueue() { clearTimeout(qSaveT); qSaveT = setTimeout(() => { idb('lists', 'readwrite', s => s.put({ name: '__queue', sids: queue.slice(), at: Date.now() })).catch(() => {}); }, 400); }
-function saveNow() { const s = song(idx); if (s) store.set('dcar2-now', { sid: s.sid, t: Math.round(cur().currentTime || 0) }); }
+function saveNow() { const s = song(idx); if (s) { store.set('dcar2-now', { sid: s.sid, t: Math.round(cur().currentTime || 0) }); savePos(); } }
 let storeWarned = false;
 async function addFiles(files) {
   files = files.filter(isAudio); let n = 0;
@@ -306,6 +362,7 @@ let act = 0;                       // which element is the current song
 const cur = () => els[act], other = () => els[1 - act];
 const P = { playing: false, fade: null };
 function loadInto(el, s) {
+  el._restore = null;
   if (el._url) URL.revokeObjectURL(el._url);
   if (!el.paused) el._self = true;   // swapping the song on a playing element fires 'pause': that one is ours
   el._url = URL.createObjectURL(s.blob); el._sid = s.sid; el._xf = false; el.src = el._url; el.volume = 0;
@@ -350,17 +407,20 @@ function fadeFail(f, why) {
 // go to queue position i; secs = overlap length (0 = straight switch on the SAME element)
 function goTo(i, secs) {
   const s = song(i); if (!s) return;
+  if (!s.blob) { idx = i; showSong(); render(); return needFolder(); }
   if (P.fade) endFade();
+  noteRecent(s.sid);
+  const resumeAt = longItem(s) && POS[s.sid] > 10 ? POS[s.sid] : 0;
   const out = cur(), inn = other(), layer = secs > 0 && P.playing && !out.paused && !out.ended;
   if (!layer) {
     // hard switch: reuse the element that was already playing (it already holds the media session / audio focus)
-    loadInto(out, s); out.volume = gainOf(); quiet(inn); idx = i; P.playing = true;
+    loadInto(out, s); if (resumeAt) out._restore = resumeAt; out.volume = gainOf(); quiet(inn); idx = i; P.playing = true;
     showSong(); render(); saveNow();
     playEl(out).then(r => { if (r !== true && out === cur() && idx === i) stalled(r); });
     return;
   }
   const fromIdx = idx;
-  loadInto(inn, s); act = 1 - act; idx = i;
+  loadInto(inn, s); if (resumeAt) inn._restore = resumeAt; act = 1 - act; idx = i;
   showSong();
   const f = P.fade = { out, in: inn, t0: 0, ms: secs * 1000, asked: performance.now(), fromIdx };
   tickStart(); P.playing = true;
@@ -441,6 +501,7 @@ els.forEach(el => {
       fadeFail(f, 'old song ended before the new one started');   // fall through to a hard switch
     }
     if (el !== cur()) return;
+    { const s = song(idx); if (longItem(s) && POS[s.sid]) { delete POS[s.sid]; infoPut('pos', POS); } }
     const n = nextIndex();
     if (n == null) { P.playing = false; render(); posState(); return; }
     dbg('ended -> hard switch to #' + (n + 1) + (document.hidden ? ' (hidden)' : ''));
@@ -448,7 +509,7 @@ els.forEach(el => {
   });
   el.addEventListener('error', () => {
     if (el !== cur() || !el.getAttribute('src') || el.getAttribute('src') === SILENT) return;
-    const s = song(idx); if (!document.hidden) toast(`Couldn't play ${s ? parse(s.name).title : 'that song'}: skipping`);
+    const s = song(idx); if (!document.hidden) toast(`Couldn't play ${s ? songInfo(s).title : 'that song'}: skipping`);
     const n = nextIndex(); if (n != null && n !== idx && P.playing) goTo(n, 0);
   });
 });
@@ -470,15 +531,15 @@ function onTime(el) {
 const ms = 'mediaSession' in navigator ? navigator.mediaSession : null;
 function showSong() {
   const s = song(idx); if (!s) return;
-  const p = parse(s.name);
+  const p = songInfo(s);
   $('cTitle').textContent = p.title; $('cArtist').textContent = p.artist || ' ';
   $('cMeta').textContent = `Song ${idx + 1} of ${queue.length}`;
   $('cSeek').value = 0; $('cSeek').style.setProperty('--v', '0%'); $('cEl').textContent = '0:00'; $('cRem').textContent = '-0:00';
   if (ms && window.MediaMetadata) ms.metadata = new MediaMetadata({ title: p.title, artist: p.artist || 'Daniel Car', album: 'Daniel Car', artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] });
-  const n = nextIndex(), ns = n != null && n !== idx ? song(n) : null, np = ns ? parse(ns.name) : null;
+  const n = nextIndex(), ns = n != null && n !== idx ? song(n) : null, np = ns ? songInfo(ns) : null;
   $('cNext').innerHTML = np ? `Next&nbsp;&nbsp;<span>${esc(np.title)}</span>${np.artist ? ' · ' + esc(np.artist) : ''}` : '';
   if ($('sLib').classList.contains('open')) renderLib();
-  dashSync();
+  dashSync(); showArt(s);
 }
 function posState() {
   if (!ms) return; const el = cur();
@@ -528,7 +589,7 @@ window.addEventListener('pagehide', saveNow);
 
 // ---------- sheets ----------
 const IC_X = '<svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7L7 17"/></svg>', IC_PL = '<svg viewBox="0 0 24 24"><path d="M8 5.2v13.6L19 12z"/></svg>';
-function openSheet(id) { document.querySelectorAll('#car .sheet').forEach(s => s.classList.toggle('open', s.id === id)); if (id === 'sLib') renderLib().then(() => { if (libTab === 'q') scrollToNow(); }); if (id === 'sSet') renderSet(); }
+function openSheet(id) { document.querySelectorAll('#car .sheet').forEach(s => s.classList.toggle('open', s.id === id)); if (id === 'sLib') renderLib().then(() => { if (libTab === 'q') scrollToNow(); }); if (id === 'sSet') renderSet(); if (id === 'sBrw') { renderBrowse(); } }
 function closeSheets() { document.querySelectorAll('#car .sheet').forEach(s => s.classList.remove('open')); }
 document.querySelectorAll('#car [data-close]').forEach(b => b.onclick = closeSheets);
 async function lists() { try { const all = await idb('lists', 'readonly', s => s.getAll()); return (all || []).filter(l => l.name !== '__queue').sort((a, b) => a.name.localeCompare(b.name)); } catch (e) { return []; } }
@@ -545,9 +606,11 @@ function scrollToNow() { const n = $('cQueue').querySelector('.li.now'); if (n) 
 document.querySelectorAll('#cTabs button').forEach(b => b.addEventListener('click', e => { e.preventDefault(); showTab(b.dataset.tab); }));
 async function renderLib() {
   // up next
-  $('cQueue').innerHTML = queue.length ? queue.map((sid, i) => { const s = lib.get(sid); if (!s) return ''; const p = parse(s.name), now = i === idx;
+  const q0 = Math.max(0, idx - 30), q1 = Math.min(queue.length, Math.max(idx, 0) + 300);
+  $('cQueue').innerHTML = queue.length ? (q0 ? `<div class="empty2">${q0} earlier songs</div>` : '') + queue.slice(q0, q1).map((sid, j) => { const i = q0 + j, s = getSong(sid); if (!s) return ''; const p = songInfo(s), now = i === idx;
     return row(now ? ' now' : '', `data-i="${i}"`, p.title, now ? 'Now playing' : [p.artist, `#${i + 1}`].filter(Boolean).join(' · '), now ? '' : `<button class="nl ib x" data-rm aria-label="Remove">${IC_X}</button>`); }).join('')
-    : '<div class="empty2">Queue is empty. Tap Add songs.</div>';
+ + (q1 < queue.length ? `<div class="empty2">+ ${(queue.length - q1).toLocaleString()} more songs</div>` : '')
+    : '<div class="empty2">Queue is empty. Open Library or tap Add songs.</div>';
   $('cQueue').querySelectorAll('.li').forEach(r => {
     const i = +r.dataset.i;
     r.querySelector('.t').onclick = () => { if (i === idx) return; closeSheets(); goTo(i, P.playing ? 1.5 : 0); };
@@ -555,13 +618,13 @@ async function renderLib() {
   });
   // playlists
   const ls = await lists();
-  $('cLists').innerHTML = ls.length ? ls.map(l => row('', `data-l="${esc(l.name)}"`, l.name, `${l.sids.filter(x => lib.has(x)).length} songs`, `<button class="nl ib x" data-play aria-label="Play">${IC_PL}</button><button class="nl ib x" data-del aria-label="Delete">${IC_X}</button>`)).join('')
+  $('cLists').innerHTML = ls.length ? ls.map(l => row('', `data-l="${esc(l.name)}"`, l.name, `${l.sids.filter(has).length} songs`, `<button class="nl ib x" data-play aria-label="Play">${IC_PL}</button><button class="nl ib x" data-del aria-label="Delete">${IC_X}</button>`)).join('')
     : '<div class="empty2">No saved playlists yet.</div>';
   $('cLists').querySelectorAll('.li').forEach(r => { const n = r.dataset.l, l = ls.find(x => x.name === n); const go = () => playList(l); r.querySelector('.t').onclick = go; r.querySelector('[data-play]').onclick = go; r.querySelector('[data-del]').onclick = () => delList(n); });
   // all songs on the phone
-  const all = [...lib.values()].sort((a, b) => parse(a.name).title.localeCompare(parse(b.name).title, undefined, { numeric: true }));
+  const all = [...lib.values()].sort((a, b) => songInfo(a).title.localeCompare(songInfo(b).title, undefined, { numeric: true }));
   $('nQ').textContent = queue.length || ''; $('nL').textContent = ls.length || ''; $('nA').textContent = all.length || '';
-  $('cAll').innerHTML = all.length ? all.map(s => { const p = parse(s.name); return row(song(idx) === s ? ' now' : '', `data-s="${esc(s.sid)}"`, p.title, p.artist || ' ', `<button class="nl ib x" data-del aria-label="Delete from phone">${IC_X}</button>`); }).join('') : '<div class="empty2">No songs saved yet.</div>';
+  $('cAll').innerHTML = all.length ? all.map(s => { const p = songInfo(s); return row(song(idx) === s ? ' now' : '', `data-s="${esc(s.sid)}"`, p.title, p.artist || ' ', `<button class="nl ib x" data-del aria-label="Delete from phone">${IC_X}</button>`); }).join('') : '<div class="empty2">No songs saved yet.</div>';
   $('cAll').querySelectorAll('.li').forEach(r => {
     const sid = r.dataset.s;
     r.querySelector('.t').onclick = () => { let i = queue.indexOf(sid); if (i < 0) { i = idx + 1; queue.splice(i, 0, sid); saveQueue(); } if (i === idx) return; closeSheets(); goTo(i, P.playing ? 1.5 : 0); };
@@ -569,8 +632,8 @@ async function renderLib() {
   });
 }
 function playList(l) {
-  if (!l) return; const sids = l.sids.filter(x => lib.has(x));
-  if (!sids.length) return toast('Those songs are no longer on this phone. Add them again.');
+  if (!l) return; const sids = l.sids.filter(x => { const s = getSong(x); return s && s.blob; });
+  if (!sids.length) return LX.recs.length && !LX.files ? needFolder() : toast('Those songs are no longer on this phone. Add them again.');
   const keep = song(idx); queue = keep && P.playing ? [keep.sid, ...sids.filter(x => x !== keep.sid)] : sids; idx = keep && P.playing ? 0 : -1;
   saveQueue(); closeSheets(); toast(`Playing "${l.name}" · ${sids.length} songs`);
   if (idx === 0) goTo(1 < queue.length ? 1 : 0, 1.5); else goTo(0, 0);
@@ -585,7 +648,7 @@ async function delList(name) { if (!confirm(`Delete the playlist "${name}"? (Son
 async function delSong(sid) {
   const s = lib.get(sid); if (!s) return;
   if (song(idx) === s) return toast("That song is playing: skip it first");
-  if (!confirm(`Delete "${parse(s.name).title}" from this phone?`)) return;
+  if (!confirm(`Delete "${songInfo(s).title}" from this phone?`)) return;
   try { await idb('songs', 'readwrite', st => st.delete(sid)); } catch (e) {}
   lib.delete(sid); const i = queue.indexOf(sid); if (i >= 0) { queue.splice(i, 1); if (i < idx) idx--; saveQueue(); }
   showSong(); render(); renderLib();
@@ -596,6 +659,8 @@ function renderSet() {
     SEG('xf', 'Crossfade', 'Layers the next song in this many seconds before the current one ends. Next / Back always use a quick 1.5 s blend.', [[0, 'Off'], [3, '3 s'], [6, '6 s'], [10, '10 s']]) +
     SEG('repeat', 'Repeat queue', 'Start again from the top when the queue ends.', [[true, 'On'], [false, 'Off']]) +
     SEG('wake', 'Keep screen on while playing', '', [[true, 'On'], [false, 'Off']]) +
+    `<div class="sec">Library</div><div class="set"><small>${LX.meta ? `Song index: ${LX.recs.filter(r => !r.fresh).length.toLocaleString()} songs (${esc(LX.name)}${LX.meta.gen ? ', built ' + esc(String(LX.meta.gen).slice(0, 10)) : ''})` : 'No song index yet. Load songs.json.gz from the phone (copied from the PC).'}<br>${LX.files ? `Music folder linked: ${LX.linked.toLocaleString()} matched${LX.fresh ? `, ${LX.fresh} new` : ''}` : 'Music folder not linked this session.'}</small></div>` +
+    `<div class="row2"><button class="nl btn" id="sIdx">${LX.meta ? 'Replace song index' : 'Load song index'}</button><button class="nl btn" id="sDir">Link music folder</button>${LX.meta ? '<button class="nl btn" id="sNoIdx">Remove index</button>' : ''}</div>` +
     `<div class="sec">Dash mode</div><div class="row2"><button class="nl btn" id="sDash">Open dash mode</button></div>` +
     SEG('dashAuto', 'Open dash automatically on play', '', [[false, 'Off'], [true, 'On']]) +
     SEG('dashViz', 'Pulse visualizer', 'A drawn animation at a steady tempo (it does not listen to the music). Swells during crossfades, rests when paused.', [[true, 'On'], [false, 'Off']]) +
@@ -608,6 +673,8 @@ function renderSet() {
     prefs[k] = v; savePrefs(); g.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); dashApply(); render(); showSong(); wake();
   }));
   $('sDash').onclick = e => { e.preventDefault(); openDash(); };
+  $('sIdx').onclick = e => { e.preventDefault(); $('bIdx').click(); }; $('sDir').onclick = e => { e.preventDefault(); $('cDir').click(); };
+  if ($('sNoIdx')) $('sNoIdx').onclick = e => { e.preventDefault(); forgetIndex(); };
 }
 function shuffle() {
   const head = queue.slice(0, idx + 1), rest = queue.slice(idx + 1);
@@ -644,7 +711,7 @@ function dashApply() {
 function dashClockRun() { clearInterval(dash.clockT); dash.clockT = 0; if (dash.open && !document.hidden) { dashClock(); dash.clockT = setInterval(dashClock, 1000); } }   // no clock timer while minimized
 function dashSync() {
   if (!dash.open) return;
-  const s = song(idx), p = s ? parse(s.name) : null;
+  const s = song(idx), p = s ? songInfo(s) : null;
   const set = (id, t) => { const e = $(id); if (e.textContent !== t) e.textContent = t; };
   set('dTitle', p ? p.title : 'Daniel Car'); set('dArtist', p ? p.artist || ' ' : (queue.length ? 'Press play' : 'Add music from the player'));
 }
@@ -731,30 +798,479 @@ dpress('dTap', tapTempo); dpress('dVizB', () => { prefs.dashViz = !prefs.dashViz
 // ---------- wiring ----------
 const press = (id, fn) => $(id).addEventListener('click', e => { e.preventDefault(); fn(); });
 press('cPlay', toggle); press('cNextB', next); press('cPrev', back);
-press('cLib', () => openSheet('sLib')); press('cDash', openDash); press('cSet', () => openSheet('sSet'));
+press('cLib', () => openSheet('sLib')); press('cBrw', () => openSheet('sBrw')); press('cDash', openDash); press('cSet', () => openSheet('sSet'));
 press('cAdd', () => $('cFile').click()); press('cAddDir', () => $('cDir').click());
 press('cShuf', shuffle); press('cSaveList', saveList);
 press('cClear', () => { if (!confirm('Clear the queue? (Songs and playlists stay on the phone.)')) return; const s = song(idx); queue = s ? [s.sid] : []; idx = s ? 0 : -1; saveQueue(); showSong(); render(); renderLib(); });
 press('cPlayAll', () => { const all = [...lib.keys()]; if (!all.length) return; const s = song(idx); queue = s && P.playing ? [s.sid, ...all.filter(x => x !== s.sid)] : all; saveQueue(); closeSheets(); if (s && P.playing) { idx = 0; next(); } else { idx = -1; goTo(0, 0); } });
 const onPick = e => { let f = [...e.target.files]; e.target.value = ''; f = f.filter(isAudio).sort((a, b) => (a.webkitRelativePath || a.name).localeCompare(b.webkitRelativePath || b.name, undefined, { numeric: true })); addFiles(f).then(n => toast(`Added ${n} song${n === 1 ? '' : 's'}`)); };
-$('cFile').onchange = onPick; $('cDir').onchange = onPick;
+$('cFile').onchange = onPick;
+$('cDir').onchange = e => { const f = [...e.target.files]; if (LX.recs.length || f.filter(isAudio).length > 300) { e.target.value = ''; return linkFolder(f); } onPick(e); };
 document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer && e.dataTransfer.files.length) addFiles([...e.dataTransfer.files]); });
 document.addEventListener('keydown', e => { if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return; const k = e.key.toLowerCase(); if (k === ' ') { e.preventDefault(); toggle(); } else if (k === 'arrowright' || k === 'n') next(); else if (k === 'arrowleft' || k === 'b') back(); });
+
+
+// ===================== v2.4 library: song index (songs.json.gz built on the PC) + the linked music folder =====================
+// The index is a few MB, kept in IndexedDB ('info' -> 'libindex'). Audio files are NEVER copied into storage in this mode:
+// the picked folder's File objects live in memory for this session only, matched to index entries by relative path.
+const EXCL = new Set(['_extra copies', 'short clips', '_playlists']);
+const MIXF = new Set(['bangers', 'chill', 'chill vibes', 'feel good', 'hype', 'late night drive', 'party', 'quiet storm', 'sad hours', 'sunday cookout', 'throwbacks', 'workout', 'relaxing spanish', 'they were all making bangers']);
+const DEC_RE = /^(.*?)\s+(60s & Earlier|\d{1,3}0s|\(Year Unknown\))(?:\s+\d+)?$/i;
+const DECS = ['60s & Earlier', '70s', '80s', '90s', '2000s', '2010s', '2020s', 'Unknown'];
+const CTN = { m: 'Music', a: 'Audiobooks', p: 'Podcasts & Docs', v: 'Video Audio' };
+const coll = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+const nrm = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, ' ').trim();
+function parseFolder(d) {
+  const name = String(d || '').split('/').pop(), radio = /\bradio\b/i.test(name), m = !radio && name.match(DEC_RE);
+  if (m) return { g: m[1].trim(), dec: /unknown/i.test(m[2]) ? 'Unknown' : m[2], st: false };
+  return { g: name.replace(/\s*(all decades radio|radio)(\s*\(.*?\))?\s*$/i, '').trim() || name || 'Unknown', dec: '', st: radio || MIXF.has(name.toLowerCase()) };
+}
+const LX = { meta: null, name: '', recs: [], byPath: new Map(), byNS: new Map(), X: new Set(), linked: 0, fresh: 0, files: 0, lastFiles: null, cache: {} };
+const songCache = new Map();
+function libSong(sid) {
+  if (!sid || sid.slice(0, 2) !== 'p:') return null;
+  const hit = LX.byPath.get(sid.slice(2).toLowerCase()), r = hit && hit.r; if (!r) return null;
+  let s = songCache.get(r.sid);
+  if (!s) { s = { sid: r.sid, name: r.name, r, get blob() { return r.file; } }; songCache.set(r.sid, s); }
+  return s;
+}
+const getSong = sid => lib.get(sid) || libSong(sid) || null;
+const has = sid => lib.has(sid) || !!libSong(sid);
+const songInfo = s => s && s.r ? { title: s.r.t, artist: s.r.a } : parse(s && s.name);
+const longItem = s => !!(s && s.r && (s.r.c !== 'm' || s.r.d > 1200));
+
+async function gunzipJSON(blob) {
+  const h = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  let text;
+  if (h[0] === 0x1f && h[1] === 0x8b) {
+    if (!window.DecompressionStream) throw new Error('this browser cannot unzip it');
+    text = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  } else text = await blob.text();
+  return JSON.parse(text);
+}
+function buildIndex(doc) {
+  const F = doc.F || [], G = doc.G || [], TG = doc.TG || [];
+  LX.meta = doc.meta || {}; LX.recs = []; LX.byPath.clear(); LX.byNS.clear(); LX.cache = {}; songCache.clear();
+  const fp = (fi, n) => { const d = (F[fi] || [''])[0]; return d ? d + '/' + n : n; };
+  LX.X = new Set((doc.X || []).map(x => fp(x[0], x[1]).toLowerCase()));
+  for (const x of doc.S || []) {
+    const fo = F[x.f] || ['', 0, '', 0], go = F[x.gf != null ? x.gf : x.f] || fo, path = fp(x.f, x.n);
+    const r = { sid: 'p:' + path, path, dir: fo[0], name: x.n, t: x.t || parse(x.n).title, a: x.a || '', aa: x.aa || '', al: x.al || '', tn: x.tn || 0, y: x.y || 0,
+      d: x.d || 0, s: x.s || 0, g: G[go[1]] || 'Unknown', dec: go[2] || '', tg: x.tg != null ? TG[x.tg] || '' : '', c: x.c || 'm', cf: x.cf || 'h', fl: x.fl || 0,
+      du: x.du, st: fo[3] ? [fo[0]] : [], cp: [], file: null, q: null };
+    LX.byPath.set(path.toLowerCase(), { r, main: true });
+    for (const [k, arr] of [['st', x.st], ['cp', x.cp]]) for (const c of arr || []) { r[k].push((F[c[0]] || [''])[0]); LX.byPath.set(fp(c[0], c[1] || x.n).toLowerCase(), { r, main: false }); }
+    LX.byNS.set(x.n.toLowerCase() + '|' + r.s, r);
+    LX.recs.push(r);
+  }
+}
+// match the picked folder's files to index entries (relative path first, then file name + size); unknown files become "new" entries
+function linkFiles(files) {
+  for (const r of LX.recs) r.file = null;
+  LX.recs = LX.recs.filter(r => { if (!r.fresh) return true; LX.byPath.delete(r.path.toLowerCase()); for (const d of r.st.concat(r.cp)) LX.byPath.delete((d + '/' + r.name).toLowerCase()); return false; });
+  const kCount = new Map(), pending = []; let matched = 0;
+  for (const f of files) {
+    if (!isAudio(f)) continue;
+    const segs = (f.webkitRelativePath || f.name).normalize('NFC').split('/');
+    if (segs.slice(0, -1).some(x => EXCL.has(x.toLowerCase()))) continue;
+    let hit = null, k = 0;
+    for (; k < segs.length - 1; k++) { const key = segs.slice(k).join('/').toLowerCase(); if (LX.X.has(key)) { hit = 'X'; break; } hit = LX.byPath.get(key); if (hit) break; }
+    if (hit === 'X') continue;
+    if (hit) { kCount.set(k, (kCount.get(k) || 0) + 1); if (hit.main || !hit.r.file) hit.r.file = f; matched++; continue; }
+    const r2 = LX.byNS.get(f.name.normalize('NFC').toLowerCase() + '|' + f.size);
+    if (r2) { if (!r2.file) r2.file = f; matched++; continue; }
+    pending.push([f, segs]);
+  }
+  let off = -1, best = 0; kCount.forEach((n, k) => { if (n > best) { best = n; off = k; } });
+  const fresh = new Map();
+  for (const [f, segs] of pending) {
+    const o = off >= 0 ? off : (segs.length > 2 ? 1 : 0), path = segs.slice(Math.min(o, segs.length - 1)).join('/');
+    const dir = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '', pf = parseFolder(dir), key = f.name.toLowerCase() + '|' + f.size, prev = fresh.get(key);
+    if (prev) {   // on the phone, radio folders hold real copies: fold them into one song
+      (pf.st ? prev.st : prev.cp).push(dir); LX.byPath.set(path.toLowerCase(), { r: prev, main: false });
+      if (parseFolder(prev.dir).st && !pf.st) { prev.g = pf.g; prev.dec = pf.dec; }
+      continue;
+    }
+    const p = parse(f.name), low = nrm(dir);
+    const r = { sid: 'p:' + path, path, dir, name: f.name, t: p.title, a: p.artist, aa: '', al: '', tn: 0, y: 0, d: 0, s: f.size, g: pf.g, dec: pf.dec, tg: '',
+      c: /audiobook/.test(low) ? 'a' : /podcast|documentar/.test(low) ? 'p' : 'm', cf: 'm', fl: 64, st: pf.st ? [dir] : [], cp: [], file: f, fresh: true, q: null };
+    fresh.set(key, r); LX.byPath.set(path.toLowerCase(), { r, main: true }); LX.recs.push(r);
+  }
+  LX.linked = matched; LX.fresh = fresh.size; LX.files = files.length; LX.lastFiles = files; LX.cache = {};
+  freshTags([...fresh.values()]);
+}
+// tags are read on demand only for files that are not in the index (new since the last PC build)
+let freshRun = 0;
+async function freshTags(list) {
+  const run = ++freshRun; let n = 0;
+  for (const r of list.slice(0, 3000)) {
+    if (run !== freshRun) return;
+    try { const t = await readID3(r.file, false); if (t) applyTags(r, t); } catch (e) {}
+    if (++n % 150 === 0) { LX.cache = {}; browseSoon(); }
+  }
+  LX.cache = {}; browseSoon();
+}
+function applyTags(r, t) {
+  if (t.t) r.t = t.t; if (t.a) r.a = t.a; if (t.aa) r.aa = t.aa; if (t.al) r.al = t.al; if (t.g) r.tg = t.g;
+  if (t.y) r.y = parseInt(t.y, 10) || 0; if (t.tn) r.tn = parseInt(t.tn, 10) || 0; r.q = null; r.fl |= 128;
+}
+// minimal ID3v2.3/2.4 reader: small reads frame by frame, the picture is only sliced (never copied)
+async function readID3(file, wantArt) {
+  if (!file) return null;
+  const rd = async (a, b) => new Uint8Array(await file.slice(a, b).arrayBuffer());
+  const h = await rd(0, 10); if (h.length < 10 || h[0] !== 73 || h[1] !== 68 || h[2] !== 51) return null;
+  const v = h[3]; if (v < 3 || v > 4) return null;
+  const ss = (b, o) => (b[o] & 127) << 21 | (b[o + 1] & 127) << 14 | (b[o + 2] & 127) << 7 | (b[o + 3] & 127);
+  const be = (b, o) => ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0;
+  const end = 10 + ss(h, 6); let pos = 10; const out = {};
+  if (h[5] & 0x40) { const e = await rd(10, 14); pos += v === 4 ? ss(e, 0) : be(e, 0) + 4; }
+  const want = { TIT2: 't', TPE1: 'a', TPE2: 'aa', TALB: 'al', TCON: 'g', TDRC: 'y', TYER: 'y', TRCK: 'tn' };
+  for (let n = 0; n < 80 && pos + 10 <= end; n++) {
+    const fh = await rd(pos, pos + 10), id = String.fromCharCode(fh[0], fh[1], fh[2], fh[3]);
+    if (!/^[A-Z0-9]{4}$/.test(id)) break;
+    const sz = v === 4 ? ss(fh, 4) : be(fh, 4), body = pos + 10; pos = body + sz;
+    if (!sz || pos > end + 16) break;
+    if (want[id] && sz < 4096) { if (!out[want[id]]) { const b = await rd(body, body + sz); const t = id3Text(b); if (t) out[want[id]] = t; } }
+    else if (id === 'APIC' && wantArt && !out.art) {
+      const b = await rd(body, body + Math.min(sz, 700)), enc = b[0]; let i = 1;
+      while (i < b.length && b[i]) i++;
+      let mime = String.fromCharCode(...b.subarray(1, i)).toLowerCase() || 'image/jpeg'; if (!mime.includes('/')) mime = 'image/' + (mime === 'jpg' ? 'jpeg' : mime);
+      i += 2;
+      if (enc === 1 || enc === 2) { while (i + 1 < b.length && (b[i] || b[i + 1])) i += 2; i += 2; } else { while (i < b.length && b[i]) i++; i++; }
+      if (i < b.length && sz - i > 100) out.art = file.slice(body + i, body + sz, mime);
+    }
+  }
+  if (out.g) out.g = out.g.replace(/^\(\d+\)\s*/, '').trim();
+  return out;
+}
+function id3Text(b) {
+  const enc = b[0], d = b.subarray(1); let s = '';
+  try {
+    if (enc === 0) s = String.fromCharCode(...d);
+    else if (enc === 3) s = new TextDecoder('utf-8').decode(d);
+    else if (enc === 2 || (d[0] === 0xfe && d[1] === 0xff)) s = new TextDecoder('utf-16be').decode(d);
+    else s = new TextDecoder('utf-16le').decode(d);
+  } catch (e) { s = ''; }
+  return s.replace(/^\ufeff/, '').split('\0')[0].trim();
+}
+
+// ---------- favorites, recently played, resume positions (IndexedDB 'info') ----------
+let FAV = new Set(), RECENT = [], POS = {};
+const infoPut = (k, v) => idb('info', 'readwrite', s => s.put(v, k)).catch(() => {});
+let posT = 0;
+function savePos() {
+  const s = song(idx); if (!longItem(s)) return;
+  const el = cur(), t = el.currentTime || 0, d = el.duration;
+  if (isFinite(d) && d > 0 && d - t < 30) delete POS[s.sid]; else if (t > 10) POS[s.sid] = Math.round(t); else return;
+  clearTimeout(posT); posT = setTimeout(() => infoPut('pos', POS), 500);
+}
+function noteRecent(sid) {
+  if (!sid || sid.slice(0, 2) !== 'p:') return;
+  RECENT = [sid, ...RECENT.filter(x => x !== sid)].slice(0, 30); infoPut('recent', RECENT);
+  if ($('sBrw').classList.contains('open')) drawRecent();
+}
+function toggleFav(sid) { if (FAV.has(sid)) FAV.delete(sid); else FAV.add(sid); infoPut('favs', [...FAV]); LX.cache.favs = null; }
+
+// ---------- cover art: read on demand from the playing file only, never cached ----------
+let artUrl = '', artTok = 0;
+async function showArt(s) {
+  const tok = ++artTok, img = $('cImg');
+  if (artUrl) { URL.revokeObjectURL(artUrl); artUrl = ''; }
+  img.hidden = true; img.removeAttribute('src');
+  const f = s && s.blob; if (!f || !/\.mp3$/i.test(s.name || '')) return;
+  let t = null; try { t = await readID3(f, true); } catch (e) {}
+  if (tok !== artTok || !t) return;
+  if (s.r && s.r.fresh && !(s.r.fl & 128)) { applyTags(s.r, t); const p = songInfo(s); $('cTitle').textContent = p.title; $('cArtist').textContent = p.artist || ' '; dashSync(); }
+  if (!t.art) return;
+  artUrl = URL.createObjectURL(t.art); img.src = artUrl; img.hidden = false;
+  if (ms && window.MediaMetadata && ms.metadata) {
+    const p = songInfo(s);
+    try { ms.metadata = new MediaMetadata({ title: p.title, artist: p.artist || 'Daniel Car', album: (s.r && s.r.al) || 'Daniel Car', artwork: [{ src: artUrl, type: t.art.type || 'image/jpeg' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }] }); } catch (e) {}
+  }
+}
+
+// ---------- index + folder loading ----------
+async function loadIndexFile(file) {
+  toast('Reading the song index…');
+  try {
+    const blob = new Blob([await file.arrayBuffer()], { type: 'application/gzip' });   // own copy (a few MB) so it survives the picker
+    const doc = await gunzipJSON(blob);
+    if (!doc || !Array.isArray(doc.S)) throw new Error('not a Daniel Car index');
+    buildIndex(doc); LX.name = file.name;
+    await idb('info', 'readwrite', s => s.put({ name: file.name, size: file.size, at: Date.now(), blob }, 'libindex'));
+    if (LX.lastFiles) linkFiles(LX.lastFiles);
+    toast(`Song index loaded: ${LX.recs.length.toLocaleString()} songs`);
+  } catch (e) { toast('Could not read that index: ' + (e && e.message || e)); }
+  renderBrowse(); if ($('sSet').classList.contains('open')) renderSet();
+}
+async function loadSavedIndex() {
+  try { const v = await idb('info', 'readonly', s => s.get('libindex')); if (v && v.blob) { buildIndex(await gunzipJSON(v.blob)); LX.name = v.name || 'songs.json.gz'; } } catch (e) { console.warn('index', e); }
+  try { FAV = new Set((await idb('info', 'readonly', s => s.get('favs'))) || []); RECENT = (await idb('info', 'readonly', s => s.get('recent'))) || []; POS = (await idb('info', 'readonly', s => s.get('pos'))) || {}; } catch (e) {}
+}
+async function forgetIndex() {
+  if (!confirm('Remove the song index from this phone? (Your music files are not touched.)')) return;
+  try { await idb('info', 'readwrite', s => s.delete('libindex')); } catch (e) {}
+  LX.recs = []; LX.byPath.clear(); LX.byNS.clear(); LX.meta = null; LX.cache = {}; songCache.clear();
+  if (LX.lastFiles) linkFiles(LX.lastFiles);
+  renderSet(); renderBrowse();
+}
+function linkFolder(files) {
+  toast(`Matching ${files.length.toLocaleString()} files…`);
+  setTimeout(() => {
+    linkFiles(files);
+    const s = song(idx);
+    if (s && s.blob && !cur().getAttribute('src')) { const el = cur(); loadInto(el, s); el.volume = gainOf(); const now = store.get('dcar2-now', null); if (now && now.sid === s.sid && now.t > 3) el._restore = now.t; else if (longItem(s) && POS[s.sid]) el._restore = POS[s.sid]; showSong(); }
+    toast(LX.meta ? `Linked ${LX.linked.toLocaleString()} songs${LX.fresh ? ` · ${LX.fresh} new (not in index)` : ''}` : `Linked ${LX.fresh.toLocaleString()} songs (no index: sorted by folder)`);
+    renderBrowse(); render();
+  }, 30);
+}
+function needFolder() { toast('Link your music folder first: Library → Link folder'); openSheet('sBrw'); }
+
+// ---------- browsing ----------
+const BR = { ct: 'm', tab: 'artists', q: '', stack: [], dec: '' };
+const MTABS = [['artists', 'Artists'], ['albums', 'Albums'], ['genres', 'Genres'], ['stations', 'Stations'], ['playlists', 'Playlists'], ['songs', 'Songs'], ['folders', 'Folders']];
+const OTABS = [['items', 'All'], ['folders', 'Folders']];
+const MAXQ = 1500;   // biggest queue built from the library at once (keeps the saved queue small)
+const recsOf = ct => LX.cache['r' + ct] || (LX.cache['r' + ct] = LX.recs.filter(r => r.c === ct));
+const bySong = (a, b) => coll.compare(a.t, b.t) || coll.compare(a.a, b.a);
+const byAlbum = (a, b) => coll.compare(a.al || '\uffff', b.al || '\uffff') || (a.tn - b.tn) || bySong(a, b);
+const byName = (a, b) => coll.compare(a.dir, b.dir) || coll.compare(a.name, b.name);
+function groupBy(list, keyFn, labelFn, subFn) {
+  const m = new Map();
+  for (const r of list) { let ks = keyFn(r); if (!Array.isArray(ks)) ks = [ks]; for (const k of new Set(ks)) { if (k == null || k === '') continue; let g = m.get(k); if (!g) m.set(k, g = { grp: 1, key: k, label: labelFn(r, k), sub: subFn ? subFn(r) : '', items: [] }); g.items.push(r); } }
+  return [...m.values()].sort((a, b) => coll.compare(a.label, b.label));
+}
+function groups(tab, ct) {
+  const ck = 'g' + ct + tab; if (LX.cache[ck]) return LX.cache[ck];
+  const L = recsOf(ct); let out = [];
+  const last = d => String(d || '(top folder)').split('/').pop();
+  if (tab === 'artists') out = groupBy(L, r => nrm(r.a || r.aa) || '~', r => r.a || r.aa || 'Unknown artist');
+  else if (tab === 'albums') out = groupBy(L.filter(r => r.al), r => nrm(r.al) + '|' + nrm(r.aa || r.a), r => r.al, r => r.aa || r.a);
+  else if (tab === 'genres') out = groupBy(L, r => nrm(r.g), r => r.g);
+  else if (tab === 'stations') out = groupBy(L, r => r.st, (r, k) => last(k));
+  else if (tab === 'folders') out = groupBy(L, r => [r.dir].concat(r.st, r.cp), (r, k) => k || '(top folder)');
+  for (const g of out) g.kind = tab;
+  return (LX.cache[ck] = out);
+}
+function favRecs() { return LX.cache.favs || (LX.cache.favs = [...FAV].map(libSong).filter(Boolean).map(s => s.r)); }
+let plCache = [];
+function currentView() {
+  if (BR.q) {
+    const words = nrm(BR.q).split(' ').filter(Boolean), out = [];
+    for (const r of LX.recs) { if (r.q == null) r.q = nrm([r.t, r.a, r.aa, r.al, r.name, r.g].join(' ')); if (words.every(w => r.q.includes(w))) out.push(r); }
+    const arts = groups('artists', 'm').filter(g => { const l = nrm(g.label); return words.every(w => l.includes(w)); }).slice(0, 8);
+    out.sort(bySong);
+    return { title: 'Search', items: arts.concat(out.slice(0, 3000)), az: false, note: `${out.length.toLocaleString()} songs${out.length > 3000 ? ' (first 3,000 shown)' : ''}` };
+  }
+  const top = BR.stack[BR.stack.length - 1];
+  if (top) {
+    let items = top.items.slice();
+    if (top.kind === 'genres' && BR.dec) items = items.filter(r => (r.dec || 'Unknown') === BR.dec);
+    const sorter = top.kind === 'artists' || top.kind === 'albums' ? byAlbum : top.kind === 'folders' || BR.ct !== 'm' ? byName : bySong;
+    return { title: top.label, items: items.sort(sorter), az: sorter === bySong, group: top };
+  }
+  if (BR.ct !== 'm') {
+    if (BR.tab === 'folders') return { title: CTN[BR.ct], items: groups('folders', BR.ct), az: true };
+    return { title: CTN[BR.ct], items: recsOf(BR.ct).slice().sort(byName), az: false };
+  }
+  if (BR.tab === 'songs') return { title: 'Songs', items: LX.cache.songs || (LX.cache.songs = recsOf('m').slice().sort(bySong)), az: true };
+  if (BR.tab === 'playlists') {
+    const fav = { grp: 1, kind: 'fav', label: '\u2665 Favorites', sub: `${favRecs().length} songs`, items: favRecs() };
+    return { title: 'Playlists', items: [fav].concat(plCache.map(l => ({ grp: 1, kind: 'list', label: l.name, sub: `${l.sids.filter(has).length} songs`, list: l, items: [] }))), az: false };
+  }
+  return { title: MTABS.find(t => t[0] === BR.tab)[1], items: groups(BR.tab, 'm'), az: true };
+}
+// virtual list: only the rows on screen exist in the page (42,000 songs never render at once)
+const RH = 68, VL = { items: [], from: -1, to: -1, raf: 0 };
+const IC_HEART = '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
+const IC_PLUS = '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>';
+const IC_SH = '<svg viewBox="0 0 24 24"><path d="M4 7h4l8 10h4M4 17h4l2.5-3M13.5 10L16 7h4M18 5l2 2-2 2M18 15l2 2-2 2"/></svg>';
+const IC_GO = '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
+function subOf(r) {
+  const parts = [];
+  if (BR.ct === 'm' || r.c === 'm') { parts.push(r.a || 'Unknown artist'); parts.push((r.g + (r.dec && r.dec !== 'Unknown' ? ' ' + r.dec : '')).trim()); }
+  else parts.push(r.dir.split('/').pop());
+  if (r.d) parts.push(fmt(r.d));
+  const pos = POS[r.sid]; if (pos) parts.push('resume ' + fmt(pos));
+  return parts.filter(Boolean).join(' · ');
+}
+function rowHTML(it, i) {
+  const st = `style="top:${i * RH}px"`;
+  if (it.grp) {
+    const btn = it.kind === 'list' ? `<button class="nl ib x" data-go aria-label="Play">${IC_PL}</button>` : `<button class="nl ib x" data-sh aria-label="Shuffle">${IC_SH}</button>`;
+    return `<div class="li" data-i="${i}" ${st}><div class="t"><b>${esc(it.label)}</b><small>${esc(it.sub || it.items.length.toLocaleString() + (it.items.length === 1 ? ' song' : ' songs'))}</small></div>${btn}</div>`;
+  }
+  const s = song(idx), now = s && s.r === it, tags = [];
+  if (it.c !== 'm' && (BR.q || BR.ct === 'm')) tags.push(CTN[it.c]);
+  if (it.cf === 'l') tags.push('unsure');
+  if (it.fresh) tags.push('new');
+  if (!it.file && LX.files) tags.push('not on phone');
+  return `<div class="li${now ? ' now' : ''}${!it.file ? ' off' : ''}" data-i="${i}" ${st}><div class="t"><b>${esc(it.t)}</b><small>${tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}${esc(subOf(it))}</small></div>` +
+    `<button class="nl ib x fav${FAV.has(it.sid) ? ' on' : ''}" data-fav aria-label="Favorite">${IC_HEART}</button><button class="nl ib x" data-add aria-label="Add to queue or playlist">${IC_PLUS}</button></div>`;
+}
+function vlSet(items, keep) {
+  const el = $('bList'), sp = $('bSp'); VL.items = items; VL.from = VL.to = -1;
+  if (!keep) el.scrollTop = 0;
+  if (!items.length) { sp.style.height = ''; sp.innerHTML = `<div class="empty2">${emptyMsg()}</div>`; return; }
+  sp.style.height = items.length * RH + 'px'; vlDraw();
+}
+function vlDraw(force) {
+  if (!VL.items.length) return;
+  const el = $('bList'), top = el.scrollTop, h = el.clientHeight || 600;
+  const from = Math.max(0, Math.floor(top / RH) - 6), to = Math.min(VL.items.length, Math.ceil((top + h) / RH) + 6);
+  if (!force && from === VL.from && to === VL.to) return;
+  VL.from = from; VL.to = to; let html = '';
+  for (let i = from; i < to; i++) html += rowHTML(VL.items[i], i);
+  $('bSp').innerHTML = html;
+}
+function emptyMsg() {
+  if (!LX.recs.length) return 'No songs yet. Load the song index from your PC, then link your phone\u2019s music folder.';
+  if (BR.q) return 'Nothing matches that search.';
+  if (BR.tab === 'stations') return 'No radio or mix folders found.';
+  return 'Nothing here yet.';
+}
+// A–Z jump bar
+const AZ = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+let azMap = {};
+function azBuild(on) {
+  const bar = $('bAZ'); bar.hidden = !on || VL.items.length < 30; $('bList').classList.toggle('noaz', bar.hidden); azMap = {};
+  if (bar.hidden) return;
+  VL.items.forEach((it, i) => { const c = (nrm(it.grp ? it.label : it.t)[0] || '#').toUpperCase(), L = /[A-Z]/.test(c) ? c : '#'; if (azMap[L] == null) azMap[L] = i; });
+  bar.innerHTML = [...AZ].map(c => `<span class="${azMap[c] != null ? 'on' : ''}">${c}</span>`).join('');
+}
+function azJump(e) {
+  const bar = $('bAZ'), r = bar.getBoundingClientRect(), k = clamp(Math.floor((e.clientY - r.top) / r.height * AZ.length), 0, AZ.length - 1);
+  let i = null; for (let j = k; j < AZ.length && i == null; j++) i = azMap[AZ[j]]; if (i == null) for (let j = k; j >= 0 && i == null; j--) i = azMap[AZ[j]];
+  if (i != null) $('bList').scrollTop = i * RH;
+  const pop = $('bAZPop'); pop.textContent = AZ[k]; pop.hidden = false; clearTimeout(azJump.t); azJump.t = setTimeout(() => { pop.hidden = true; }, 600);
+}
+$('bAZ').addEventListener('pointerdown', e => { e.preventDefault(); $('bAZ').setPointerCapture(e.pointerId); azJump(e); });
+$('bAZ').addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'touch') azJump(e); });
+$('bList').addEventListener('scroll', () => { if (!VL.raf) VL.raf = requestAnimationFrame(() => { VL.raf = 0; vlDraw(); }); }, { passive: true });
+window.addEventListener('resize', () => { if ($('sBrw').classList.contains('open')) vlDraw(true); });
+
+let curView = null, browseT = 0;
+function browseSoon() { clearTimeout(browseT); browseT = setTimeout(() => { if ($('sBrw').classList.contains('open')) renderBrowse(true); }, 400); }
+async function renderBrowse(keep) {
+  if (BR.ct === 'm' && BR.tab === 'playlists' && !BR.q) plCache = await lists();
+  const counts = { m: 0, a: 0, p: 0, v: 0 }; for (const r of LX.recs) counts[r.c]++;
+  $('bCT').innerHTML = Object.keys(CTN).map(k => `<button data-ct="${k}" class="${BR.ct === k && !BR.q ? 'on' : ''}">${CTN[k]}<span>${counts[k] ? counts[k].toLocaleString() : ''}</span></button>`).join('');
+  const tabs = BR.ct === 'm' ? MTABS : OTABS;
+  $('bST').hidden = !!BR.q || !!BR.stack.length;
+  $('bST').innerHTML = tabs.map(([k, l]) => `<button data-tab="${k}" class="${BR.tab === k ? 'on' : ''}">${l}</button>`).join('');
+  // status: index + folder
+  const playable = LX.recs.reduce((n, r) => n + (r.file ? 1 : 0), 0);
+  let st = '';
+  if (!LX.meta) st += `<span>No song index loaded.</span><button data-act="idx">Load index</button>`;
+  else st += `<span>${LX.recs.length.toLocaleString()} songs${LX.files ? ` · ${playable.toLocaleString()} playable` : ''}</span>`;
+  if (!LX.files) st += `<span>Folder not linked this session.</span><button data-act="dir">Link folder</button>`;
+  else st += `<button data-act="dir">Re-link folder</button>`;
+  $('bStat').innerHTML = st;
+  const v = curView = currentView();
+  $('bTitle').textContent = BR.q ? 'Search' : BR.stack.length ? v.title : 'Library';
+  $('bBack').hidden = !BR.stack.length && !BR.q;
+  // header actions
+  let hd = '';
+  if (BR.q) hd = `<h3>${esc(v.note || '')}</h3>`;
+  else if (v.group) {
+    hd = `<button class="nl btn hb" data-act="play">${IC_PL}Play</button><button class="nl btn hb" data-act="shuf">${IC_SH}Shuffle</button>`;
+    if (v.group.kind === 'genres') { const ds = new Set(v.group.items.map(r => r.dec || 'Unknown')); hd += `<div class="decs seg">${['', ...DECS.filter(d => ds.has(d))].map(d => `<button data-dec="${esc(d)}" class="${BR.dec === d ? 'on' : ''}">${d || 'All decades'}</button>`).join('')}</div>`; }
+  } else if (BR.ct === 'm') hd = `<button class="nl btn hb" data-act="shufall">${IC_SH}Shuffle all music</button>`;
+  else hd = `<button class="nl btn hb" data-act="playall">${IC_PL}Play all</button>`;
+  $('bHead').innerHTML = hd; $('bHead').hidden = !hd;
+  drawRecent();
+  vlSet(v.items, keep); azBuild(v.az);
+}
+function drawRecent() {
+  const show = !BR.q && !BR.stack.length && BR.ct === 'm';
+  const rs = show ? RECENT.map(libSong).filter(Boolean).slice(0, 12) : [];
+  $('bRecent').hidden = !rs.length;
+  $('bRecent').innerHTML = rs.length ? '<small>Recently played</small>' + rs.map(s => `<button data-sid="${esc(s.sid)}">${esc(s.r.t)}<i>${esc(s.r.a || '')}</i></button>`).join('') : '';
+}
+function shuffled(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function playRecs(recs, start, shuf) {
+  let list = recs.filter(r => r && !r.grp && r.file);
+  if (!list.length) return LX.files ? toast('None of those songs are on this phone') : needFolder();
+  if (shuf) list = shuffled(list).slice(0, MAXQ);
+  else { const s0 = recs[start], i0 = Math.max(0, list.indexOf(s0)); list = list.slice(i0, i0 + MAXQ); }
+  const sids = list.map(r => r.sid), keep = song(idx);
+  if (keep && P.playing) { queue = [keep.sid, ...sids.filter(x => x !== keep.sid)]; idx = 0; saveQueue(); closeSheets(); goTo(queue.length > 1 ? 1 : 0, 1.5); }
+  else { queue = sids; idx = -1; saveQueue(); closeSheets(); goTo(0, 0); }
+  toast(shuf ? `Shuffling ${list.length.toLocaleString()} songs` : `Playing ${list.length.toLocaleString()} songs`);
+}
+function openGroup(g) { BR.stack.push(g); BR.dec = ''; renderBrowse(); }
+$('bList').addEventListener('click', e => {
+  const row = e.target.closest('.li'); if (!row) return; e.preventDefault();
+  const i = +row.dataset.i, it = VL.items[i]; if (!it) return;
+  const b = e.target.closest('button');
+  if (it.grp) {
+    if (it.kind === 'list') return playList(it.list);
+    if (b && b.hasAttribute('data-sh')) return playRecs(it.items, 0, true);
+    return openGroup(it);
+  }
+  if (b && b.hasAttribute('data-fav')) { toggleFav(it.sid); b.classList.toggle('on', FAV.has(it.sid)); return; }
+  if (b && b.hasAttribute('data-add')) return openPick(it);
+  playRecs(VL.items, i, false);
+});
+$('bCT').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; BR.ct = b.dataset.ct; BR.stack = []; BR.q = ''; $('bQ').value = ''; BR.tab = BR.ct === 'm' ? (MTABS.some(t => t[0] === BR.tab) ? BR.tab : 'artists') : 'items'; renderBrowse(); });
+$('bST').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; BR.tab = b.dataset.tab; BR.stack = []; renderBrowse(); });
+$('bHead').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; e.preventDefault();
+  if (b.dataset.dec != null) { BR.dec = b.dataset.dec; return renderBrowse(); }
+  const a = b.dataset.act, v = curView;
+  if (a === 'play') playRecs(v.items, 0, false);
+  else if (a === 'shuf') playRecs(v.items, 0, true);
+  else if (a === 'shufall') playRecs(recsOf('m'), 0, true);
+  else if (a === 'playall') playRecs(v.items, 0, false);
+});
+$('bStat').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; e.preventDefault(); if (b.dataset.act === 'idx') $('bIdx').click(); else $('cDir').click(); });
+$('bRecent').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const s = libSong(b.dataset.sid); if (s) playRecs([s.r], 0, false); });
+$('bBack').addEventListener('click', e => { e.preventDefault(); if (BR.q) { BR.q = ''; $('bQ').value = ''; } else { BR.stack.pop(); BR.dec = ''; } renderBrowse(); });
+let qT = 0;
+$('bQ').addEventListener('input', e => { clearTimeout(qT); qT = setTimeout(() => { BR.q = e.target.value.trim(); renderBrowse(); }, 180); });
+$('bQ').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+$('bIdx').onchange = e => { const f = e.target.files[0]; e.target.value = ''; if (f) loadIndexFile(f); };
+// add-to chooser: play next / end of queue / a playlist
+let pickRec = null;
+async function openPick(r) {
+  pickRec = r; const ls = await lists();
+  $('bPickT').textContent = r.t;
+  $('bPickL').innerHTML = `<button class="nl btn" data-p="next">Play next</button><button class="nl btn" data-p="end">Add to end of Up next</button>` +
+    `<div class="sec">Add to playlist</div>` + ls.map(l => `<button class="nl btn" data-l="${esc(l.name)}">${esc(l.name)}</button>`).join('') + `<button class="nl btn" data-p="new">New playlist…</button>`;
+  $('bPick').classList.add('open');
+}
+$('bPick').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return; e.preventDefault();
+  const r = pickRec, close = () => $('bPick').classList.remove('open');
+  if (b.hasAttribute('data-x') || !r) return close();
+  if (!r.file && b.dataset.p !== 'new' && !b.dataset.l) { close(); return LX.files ? toast('That song is not on this phone') : needFolder(); }
+  if (b.dataset.p === 'next' || b.dataset.p === 'end') {
+    const j = queue.indexOf(r.sid); if (j >= 0 && j !== idx) { queue.splice(j, 1); if (j < idx) idx--; }
+    if (j !== idx || j < 0) { if (b.dataset.p === 'next') queue.splice(idx + 1, 0, r.sid); else queue.push(r.sid); }
+    if (idx < 0) { idx = 0; loadInto(cur(), song(0)); showSong(); }
+    saveQueue(); showSong(); render(); toast(b.dataset.p === 'next' ? 'Playing next' : 'Added to Up next');
+  } else {
+    let name = b.dataset.l; if (b.dataset.p === 'new') { name = (prompt('New playlist name', 'Car mix') || '').trim(); if (!name || name === '__queue') return; }
+    try { const l = (await idb('lists', 'readonly', s => s.get(name))) || { name, sids: [] }; if (!l.sids.includes(r.sid)) l.sids.push(r.sid); l.at = Date.now(); await idb('lists', 'readwrite', s => s.put(l)); toast(`Added to "${name}"`); } catch (err) { toast('Could not save the playlist'); }
+  }
+  close();
+});
 
 // ---------- start: restore songs, last queue and the song you were on ----------
 async function restore() {
   try {
     navigator.storage && navigator.storage.persist && navigator.storage.persist().catch(() => {});
+    await loadSavedIndex();
     const recs = await idb('songs', 'readonly', s => s.getAll());
     (recs || []).forEach(r => { if (r && r.blob) lib.set(r.sid, { sid: r.sid, name: r.name || (r.blob && r.blob.name) || 'Song', blob: r.blob, added: r.added || 0 }); });
     const q = await idb('lists', 'readonly', s => s.get('__queue'));
-    queue = (q && q.sids || []).filter(x => lib.has(x));
+    queue = (q && q.sids || []).filter(has);
     if (!queue.length && lib.size) queue = [...lib.values()].sort((a, b) => a.added - b.added).map(s => s.sid);
     if (queue.length) {
       const now = store.get('dcar2-now', null); let i = now ? queue.indexOf(now.sid) : -1;
-      idx = i >= 0 ? i : 0; const el = cur(); loadInto(el, song(idx)); el.volume = gainOf();
-      if (i >= 0 && now.t > 3) el._restore = now.t;
+      idx = i >= 0 ? i : 0; const el = cur(), s0 = song(idx);
+      if (s0 && s0.blob) { loadInto(el, s0); el.volume = gainOf(); if (i >= 0 && now.t > 3) el._restore = now.t; }
       showSong();
     }
   } catch (e) { console.warn('restore failed', e); }
